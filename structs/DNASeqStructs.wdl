@@ -4,6 +4,7 @@ struct SampleAndUnmappedBams {
   String base_file_name
   String? final_gvcf_base_name
   Array[File] flowcell_unmapped_bams
+  String unmapped_bam
   String sample_name
   String unmapped_bam_suffix
 }
@@ -12,7 +13,6 @@ struct ReferenceFasta {
   File ref_dict
   File ref_fasta
   File ref_fasta_index
-  File ref_alt
   File ref_sa
   File ref_amb
   File ref_bwt
