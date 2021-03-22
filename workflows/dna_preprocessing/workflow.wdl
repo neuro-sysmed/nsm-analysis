@@ -1,11 +1,11 @@
 version 1.0
-import "../../vars/global.wdl" as global
 
 import "../../tasks/Alignment.wdl" as Alignment
 import "../../tasks/QC.wdl" as QC
 import "../../tasks/BamUtils.wdl" as BamUtils
 
 #import "../../dna_seq/DNASeqStructs.wdl" as Structs
+import "../../vars/global.wdl" as global
 
 
 workflow DNAPreprocessing {
