@@ -54,6 +54,52 @@ task SortSam {
 }
 
 
+
+task RevertSam {
+  input {
+    File input_bam
+    String output_bam_filename
+    Int? compression_level = 2
+    String? outdir = "."
+  }
+
+
+  command {
+
+    if [  "~{outdir}" != "." ]; then
+      mkdir "~{outdir}/"
+    fi
+
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+     RevertSam \
+     -I ~{input_bam} \
+     -O ~{outdir}/~{output_bam_filename} \
+     -SANITIZE true \
+     -ATTRIBUTE_TO_CLEAR XT \
+     -ATTRIBUTE_TO_CLEAR XN \
+     -ATTRIBUTE_TO_CLEAR AS \
+     -ATTRIBUTE_TO_CLEAR OC \
+     -ATTRIBUTE_TO_CLEAR OP \
+     -SORT_ORDER queryname \
+     -RESTORE_ORIGINAL_QUALITIES true \
+     -REMOVE_DUPLICATE_INFORMATION true \
+     -REMOVE_ALIGNMENT_INFORMATION true
+  }
+  runtime {
+#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
+#    disks: "local-disk " + disk_size + " HDD"
+    cpu: "1"
+    memory: "5000 MiB"
+#    preemptible: preemptible_tries
+  }
+  output {
+    File output_bam = "~{outdir}/~{output_bam_filename}"
+  }
+}
+
+
+
+
 # Mark duplicate reads to avoid counting non-independent observations
 task MarkDuplicates {
   input {
@@ -167,6 +213,9 @@ task BaseRecalibrator {
   }
 }
 
+
+
+ 
 # Apply Base Quality Score Recalibration (BQSR) model
 task ApplyBQSR {
   input {
