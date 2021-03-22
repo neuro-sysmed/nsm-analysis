@@ -2,7 +2,7 @@ version 1.0
 
 # Read unmapped BAM, convert on-the-fly to FASTQ and stream to BWA MEM for alignment, then stream to MergeBamAlignment
 
-import "../vars/global.wdl" as global
+#import "../vars/global.wdl" as global
 
 import "../structs/DNASeqStructs.wdl"
 
