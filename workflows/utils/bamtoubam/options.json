@@ -1,0 +1,8 @@
+{
+    "final_workflow_outputs_dirs": "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_preprocessing/outputs",
+    "final_workflow_outputs_dir": "outputs",
+    "use_relative_output_paths": true,
+    "final_workflow_log_dir": "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_preprocessing/wf_logs",
+    "delete_intermediate_output_files": true,
+    "final_call_logs_dir": "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_preprocessing/call_logs"
+}
