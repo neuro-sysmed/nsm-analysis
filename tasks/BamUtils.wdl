@@ -210,7 +210,7 @@ task BaseRecalibrator {
   }
 
   command {
-    gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
+    /home/brugger/bin/gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
       -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
       -Xloggc:gc_log.log -Xms5g" \
       BaseRecalibrator \
@@ -223,7 +223,7 @@ task BaseRecalibrator {
       -L ~{sep=" -L " sequence_group_interval}
   }
   runtime {
-    docker: gatk_docker
+    #docker: gatk_docker
     preemptible: preemptible_tries
     memory: "6 GiB"
     bootDiskSizeGb: 15
@@ -272,7 +272,7 @@ task ApplyBQSR {
   }
 
   command {
-    gatk --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
+    /home/brugger/bin/gatk --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
       -XX:+PrintGCDetails -Xloggc:gc_log.log \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Dsamjdk.compression_level=~{compression_level} -Xms3000m" \
       ApplyBQSR \
@@ -291,7 +291,7 @@ task ApplyBQSR {
       -L ~{sep=" -L " sequence_group_interval}
   }
   runtime {
-    docker: gatk_docker
+    #docker: gatk_docker
     preemptible: preemptible_tries
     memory: "~{memory_size} MiB"
     bootDiskSizeGb: 15
@@ -313,13 +313,13 @@ task GatherBqsrReports {
   }
 
   command {
-    gatk --java-options "-Xms3000m" \
+    /home/brugger/bin/gatk --java-options "-Xms3000m" \
       GatherBQSRReports \
       -I ~{sep=' -I ' input_bqsr_reports} \
       -O ~{output_report_filename}
     }
   runtime {
-    docker: gatk_docker
+    #docker: gatk_docker
     preemptible: preemptible_tries
     memory: "3500 MiB"
     bootDiskSizeGb: 15
@@ -344,7 +344,7 @@ task GatherSortedBamFiles {
   Int disk_size = ceil(2 * total_input_size) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar /usr/picard/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
       GatherBamFiles \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -352,7 +352,7 @@ task GatherSortedBamFiles {
       CREATE_MD5_FILE=true
     }
   runtime {
-    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
+#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
     preemptible: preemptible_tries
     memory: "3 GiB"
     disks: "local-disk " + disk_size + " HDD"
@@ -462,7 +462,7 @@ task HaplotypeCaller {
     Float? contamination
     Boolean make_gvcf
     Int preemptible_tries
-    Int hc_scatter
+    Int? hc_scatter = 199
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
@@ -482,7 +482,7 @@ task HaplotypeCaller {
 
   command <<<
     set -e
-    gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
+    /home/brugger/bin/gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
@@ -498,7 +498,7 @@ task HaplotypeCaller {
   >>>
 
   runtime {
-    docker: gatk_docker
+#    docker: gatk_docker
     preemptible: preemptible_tries
     memory: "6.5 GiB"
     cpu: "2"
