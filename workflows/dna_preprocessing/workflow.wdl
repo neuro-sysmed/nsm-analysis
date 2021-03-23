@@ -5,7 +5,7 @@ import "../../tasks/QC.wdl" as QC
 import "../../tasks/BamUtils.wdl" as BamUtils
 
 #import "../../dna_seq/DNASeqStructs.wdl" as Structs
-#import "../../vars/global.wdl" as global
+import "../../vars/global.wdl" as global
 
 
 workflow DNAPreprocessing {

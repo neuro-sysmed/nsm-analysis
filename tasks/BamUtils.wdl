@@ -164,14 +164,18 @@ task MergeUnalignedBams {
   input {
     Array[File] bams
     String output_bam_basename
+    Boolean? index = false
   }
 
     
   command {
     /home/brugger/bin/samtools merge -n ~{output_bam_basename} ~{sep=' ' bams}
+#    if [~{index}]; then
+#      /home/brugger/bin/samtools index -n ~{output_bam_basename} 
   }
   output {
     File output_bam = "~{output_bam_basename}"
+#    File bam_index = "~{output_bam_basename}.bai" if bam_index
   }
 }
 
@@ -444,6 +448,72 @@ task GenerateSubsettedContaminationResources {
     File subsetted_contamination_mu = output_mu
   }
 }
+
+
+task HaplotypeCaller {
+  input {
+    File input_bam
+    File input_bam_index
+    File interval_list
+    String vcf_basename
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
+    Float? contamination
+    Boolean make_gvcf
+    Int preemptible_tries
+    Int hc_scatter
+    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+  }
+
+  String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
+  String output_file_name = vcf_basename + output_suffix
+
+  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
+  Int disk_size = ceil(((size(input_bam, "GiB") + 30) / hc_scatter) + ref_size) + 20
+
+#  String bamout_arg = if make_bamout then "-bamout ~{vcf_basename}.bamout.bam" else ""
+
+  parameter_meta {
+    input_bam: {
+      localization_optional: true
+    }
+  }
+
+  command <<<
+    set -e
+    gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
+      HaplotypeCaller \
+      -R ~{ref_fasta} \
+      -I ~{input_bam} \
+      -L ~{interval_list} \
+      -O ~{output_file_name} \
+      -contamination ~{default=0 contamination} \
+      -G StandardAnnotation -G StandardHCAnnotation ~{true="-G AS_StandardAnnotation" false="" make_gvcf} \
+      -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 \
+      ~{true="-ERC GVCF" false="" make_gvcf}
+
+    # Cromwell doesn't like optional task outputs, so we have to touch this file.
+    touch ~{vcf_basename}.bamout.bam
+  >>>
+
+  runtime {
+    docker: gatk_docker
+    preemptible: preemptible_tries
+    memory: "6.5 GiB"
+    cpu: "2"
+    bootDiskSizeGb: 15
+    disks: "local-disk " + disk_size + " HDD"
+  }
+
+  output {
+    File output_vcf = "~{output_file_name}"
+    File output_vcf_index = "~{output_file_name}.tbi"
+    File bamout = "~{vcf_basename}.bamout.bam"
+  }
+}
+
+
 
 # Notes on the contamination estimate:
 # The contamination value is read from the FREEMIX field of the selfSM file output by verifyBamId
