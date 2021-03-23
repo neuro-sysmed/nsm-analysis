@@ -63,7 +63,6 @@ task RevertSam {
     String? outdir = "."
   }
 
-
   command {
 
     if [  "~{outdir}" != "." ]; then
@@ -80,6 +79,8 @@ task RevertSam {
      -ATTRIBUTE_TO_CLEAR AS \
      -ATTRIBUTE_TO_CLEAR OC \
      -ATTRIBUTE_TO_CLEAR OP \
+     -ATTRIBUTE_TO_CLEAR OA \
+     -ATTRIBUTE_TO_CLEAR CO \
      -SORT_ORDER queryname \
      -RESTORE_ORIGINAL_QUALITIES true \
      -REMOVE_DUPLICATE_INFORMATION true \
@@ -155,6 +156,22 @@ task MarkDuplicates {
   output {
     File output_bam = "~{output_bam_basename}.bam"
     File duplicate_metrics = "~{metrics_filename}"
+  }
+}
+
+
+task MergeUnalignedBams {
+  input {
+    Array[File] bams
+    String output_bam_basename
+  }
+
+    
+  command {
+    /home/brugger/bin/samtools merge -n ~{output_bam_basename} ~{sep=' ' bams}
+  }
+  output {
+    File output_bam = "~{output_bam_basename}"
   }
 }
 
