@@ -34,9 +34,9 @@ task SingularityTask {
 
   }
   runtime {
+# uncomment both to run with a singularity image    
 #    backend: 'singularity'
     image: container
-    backend: ''
   }
 
 
