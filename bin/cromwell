@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import argparse
+from subprocess import run
+import shlex
+
+CROMWELL_JAR = "/home/brugger/software/jars/cromwell-58.jar"
+
+
+
+def main():
+    parser = argparse.ArgumentParser(description="cromwell wrapper script")
+    commands = ["init", "version", "utils"]  # "release",
+    parser.add_argument('--java-options', action='append', default=[])
+    parser.add_argument('command', nargs="+")
+
+    args = parser.parse_args()
+
+    args.java_options = " ".join(args.java_options)
+    args.command = " ".join(args.command)
+
+    run(shlex.split(f"java {args.java_options} -jar {CROMWELL_JAR}  {args.command}"))
+
+
+
+
+if __name__ == "__main__":
+    main()

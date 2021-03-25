@@ -1,16 +1,18 @@
 {
-    "DNAPreprocessing.sample_and_unmapped_bams": {
+    "VariantCalling.sample": {
       "sample_name": "NA12878 PLUMBING",
-      "base_file_name": "NA12878_PLUMBING",
-      "flowcell_unmapped_bams": [
-        "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_preprocessing/NA12878_24RG_small.hg38.ubam"
-      ],
-      "unmapped_bam":  "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_preprocessing/NA12878_24RG_small.hg38_22.ubam",
-      "final_gvcf_base_name": "NA12878_PLUMBING",
-      "unmapped_bam_suffix": ".ubam"
+      "bamfile": "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_variant_calling/NA12878_PLUMBING.aligned.duplicate_marked.sorted.bam",
+      "final_gvcf_base_name": "NA12878"
     },
   
-    "DNAPreprocessing.references": {
+    "VariantCalling.input_bam": "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_variant_calling/NA12878_PLUMBING.aligned.duplicate_marked.sorted.bam",
+    "VariantCalling.input_bam_index": "/home/brugger/projects/nsm/nsm-analysis/workflows/dna_variant_calling/NA12878_PLUMBING.aligned.duplicate_marked.sorted.bai",
+    "VariantCalling.base_file_name": "NA12878",
+    "VariantCalling.final_vcf_base_name": "NA12878_plumbing.vcf",
+    "VariantCalling.agg_preemptible_tries": "1",
+
+
+    "VariantCalling.references": {
       "contamination_sites_ud": "/home/brugger/projects/nsm/hg38_22/contamination-resources/1000g/1000g.phase3.100k.b38_22.vcf.gz.dat.UD",
       "contamination_sites_bed": "/home/brugger/projects/nsm/hg38_22/contamination-resources/1000g/1000g.phase3.100k.b38_22.vcf.gz.dat.bed",
       "contamination_sites_mu": "/home/brugger/projects/nsm/hg38_22/contamination-resources/1000g/1000g.phase3.100k.b38_22.vcf.gz.dat.mu",
@@ -33,11 +35,17 @@
         "/home/brugger/projects/nsm/hg38_22/Mills_and_1000G_gold_standard.indels.hg38_22.vcf.gz.tbi",
         "/home/brugger/projects/nsm/hg38_22/Homo_sapiens_assembly38_22.known_indels.vcf.gz.tbi"
       ],
-      "dbsnp_vcf": "/home/brugger/projects/nsm/hg38_22/Homo_sapiens_assembly38_22.dbsnp138.vcf",
-      "dbsnp_vcf_index": "/home/brugger/projects/nsm/hg38_22/Homo_sapiens_assembly38_22.dbsnp138.vcf.idx",
-      "evaluation_interval_list": "/home/brugger/projects/nsm/hg38_22/exome_evaluation_regions.v1.interval_list",
+      "dbsnp_vcf": "/home/brugger/projects/nsm/hg38_22/Homo_sapiens_assembly38_22.dbsnp138.vcf.gz",
+      "dbsnp_vcf_index": "/home/brugger/projects/nsm/hg38_22/Homo_sapiens_assembly38_22.dbsnp138.vcf.gz.tbi",
+      "evaluation_interval_list": "/home/brugger/projects/nsm/hg38_22/exome_calling_regions.v1.interval_list",
       "haplotype_database_file": "/home/brugger/projects/nsm/hg38_22/Homo_sapiens_assembly38_22.haplotype_database.txt"
+    },
+
+    "VariantCalling.scatter_settings": {
+      "haplotype_scatter_count": 10,
+      "break_bands_at_multiples_of": 0
     }
+
   
 }
   

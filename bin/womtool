@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+java -jar ~/software/jars/womtool-58.jar $@
