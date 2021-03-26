@@ -11,8 +11,8 @@ task BwaMem {
 # Read unmapped BAM, convert on-the-fly to FASTQ and stream to BWA MEM for alignment, then stream to MergeBamAlignment
   input {
     File input_bam
-    String bwa_cmd
-    String picard_jar
+    String? bwa_cmd = "/usr/local/bin/bwa"
+    String? picard_jar = "/usr/local/jars/picard.jar"
     String output_bam_basename
 
     ReferenceFasta reference_fasta

@@ -1,11 +1,11 @@
 version 1.0
 
-import "../../tasks/Alignment.wdl" as Alignment
-import "../../tasks/QC.wdl" as QC
-import "../../tasks/BamUtils.wdl" as BamUtils
+import "../tasks/Alignment.wdl" as Alignment
+import "../tasks/QC.wdl" as QC
+import "../tasks/BamUtils.wdl" as BamUtils
 
 #import "../../dna_seq/DNASeqStructs.wdl" as Structs
-import "../../vars/global.wdl" as global
+import "../vars/global.wdl" as global
 
 
 workflow DNAPreprocessing {
@@ -13,26 +13,12 @@ workflow DNAPreprocessing {
    input {
       SampleAndUnmappedBams sample_and_unmapped_bams
       DNASeqSingleSampleReferences references
-
-#    File contamination_sites_ud
-#    File contamination_sites_bed
-#    File contamination_sites_mu
-
-#    String cross_check_fingerprints_by
-#    File haplotype_database_file
-
-#    String recalibrated_bam_basename
-#    Boolean hard_clip_reads = false
-#    Int preemptible_tries = 2
-#    Boolean bin_base_qualities = true
-#    Boolean somatic = false
+      Int compression_level = 3
+      Int preemptible_tries = 2
    }
 
 
    String unmapped_bam_basename = basename(sample_and_unmapped_bams.unmapped_bam, sample_and_unmapped_bams.unmapped_bam_suffix)
-# String unmapped_bam_basename = "NA12878_24RG_small.hg38"
-   Int compression_level = 3
-   Int preemptible_tries = 2
    Boolean hard_clip_reads = false
 
    call global.global
@@ -49,8 +35,6 @@ workflow DNAPreprocessing {
    call Alignment.BwaMem as BwaMem {
       input:
          input_bam = sample_and_unmapped_bams.unmapped_bam,
-         bwa_cmd = global.bwa_cmd,
-         picard_jar = global.picard_jar,
          output_bam_basename = unmapped_bam_basename + ".aligned.unsorted",
          reference_fasta = references.reference_fasta,
          compression_level = compression_level,

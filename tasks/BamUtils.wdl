@@ -22,6 +22,8 @@ task SortSam {
     String output_bam_basename
     Int preemptible_tries
     Int compression_level
+    String? picard_jar = "/usr/local/jars/picard.jar"
+
   }
   # SortSam spills to disk a lot more because we are only store 300000 records in RAM now because its faster for our data so it needs
   # more disk space.  Also it spills to disk in an uncompressed format so we need to account for that with a larger multiplier
@@ -29,7 +31,7 @@ task SortSam {
   Int disk_size = ceil(sort_sam_disk_multiplier * size(input_bam, "GiB")) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /usr/local/jars/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
       SortSam \
       INPUT=~{input_bam} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -60,6 +62,7 @@ task RevertSam {
     File input_bam
     String output_bam_filename
     Int? compression_level = 2
+    String? picard_jar = "/usr/local/jars/picard.jar"
     String? outdir = "."
   }
 
@@ -69,7 +72,7 @@ task RevertSam {
       mkdir "~{outdir}/"
     fi
 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /usr/local/jars/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
      RevertSam \
      -I ~{input_bam} \
      -O ~{outdir}/~{output_bam_filename} \
@@ -110,6 +113,7 @@ task MarkDuplicates {
 #    Float total_input_size
     Int compression_level
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
 
     # The program default for READ_NAME_REGEX is appropriate in nearly every case.
     # Sometimes we wish to supply "null" in order to turn off optical duplicate detection
@@ -134,7 +138,7 @@ task MarkDuplicates {
   # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar /usr/local/jars/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
       MarkDuplicates \
       INPUT=~{input_bam} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -165,11 +169,13 @@ task MergeUnalignedBams {
     Array[File] bams
     String output_bam_basename
     Boolean? index = false
+    String? samtools_cmd = "/usr/local/bin/samtools"
+    
   }
 
     
   command {
-    /usr/local/bin/samtools merge -n ~{output_bam_basename} ~{sep=' ' bams}
+    ~{samtools_cmd} merge -n ~{output_bam_basename} ~{sep=' ' bams}
 #    if [~{index}]; then
 #      /usr/local/bin/samtools index -n ~{output_bam_basename} 
   }
@@ -197,6 +203,7 @@ task BaseRecalibrator {
     Int bqsr_scatter
     Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String gatk_cmd = "/usr/local/bin/gatk"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -210,7 +217,7 @@ task BaseRecalibrator {
   }
 
   command {
-    /usr/local/bin/gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
+    ~{gatk_cmd} --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
       -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
       -Xloggc:gc_log.log -Xms5g" \
       BaseRecalibrator \
@@ -251,11 +258,11 @@ task ApplyBQSR {
     Int compression_level
     Int bqsr_scatter
     Int preemptible_tries
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     Int memory_multiplier = 1
     Int additional_disk = 20
     Boolean bin_base_qualities = true
     Boolean somatic = false
+    String gatk_cmd = '/usr/local/bin/gatk'
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -272,7 +279,7 @@ task ApplyBQSR {
   }
 
   command {
-    /usr/local/bin/gatk --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
+    ~{gatk_cmd} --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
       -XX:+PrintGCDetails -Xloggc:gc_log.log \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Dsamjdk.compression_level=~{compression_level} -Xms3000m" \
       ApplyBQSR \
@@ -310,10 +317,11 @@ task GatherBqsrReports {
     String output_report_filename
     Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String gatk_cmd = '/usr/local/bin/gatk'
   }
 
   command {
-    /usr/local/bin/gatk --java-options "-Xms3000m" \
+    ~{gatk_cmd} --java-options "-Xms3000m" \
       GatherBQSRReports \
       -I ~{sep=' -I ' input_bqsr_reports} \
       -O ~{output_report_filename}
@@ -338,13 +346,14 @@ task GatherSortedBamFiles {
     Float total_input_size
     Int compression_level
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   # Multiply the input bam size by two to account for the input and output
   Int disk_size = ceil(2 * total_input_size) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar /usr/local/jars/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar ~{picard_jar} \
       GatherBamFiles \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -373,13 +382,14 @@ task GatherUnsortedBamFiles {
     Float total_input_size
     Int compression_level
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   # Multiply the input bam size by two to account for the input and output
   Int disk_size = ceil(2 * total_input_size) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar /usr/picard/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar ~{picard_jar}   \
       GatherBamFiles \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -464,6 +474,7 @@ task HaplotypeCaller {
     Int preemptible_tries
     Int? hc_scatter = 199
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String gatk_cmd = "/usr/local/bin/gatk"
   }
 
   String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
@@ -482,7 +493,7 @@ task HaplotypeCaller {
 
   command <<<
     set -e
-    /usr/local/bin/gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
+    ~{gatk_cmd} --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
@@ -541,6 +552,7 @@ task CheckContamination {
     Int preemptible_tries
     Float contamination_underestimation_factor
     Boolean disable_sanity_check = false
+    String verifybamid_cmd = "/usr/local/bin/VerifyBamID"
   }
 
   Int disk_size = ceil(size(input_bam, "GiB") + size(ref_fasta, "GiB")) + 30
@@ -550,7 +562,7 @@ task CheckContamination {
 
     # creates a ~{output_prefix}.selfSM file, a TSV file with 2 rows, 19 columns.
     # First row are the keys (e.g., SEQ_SM, RG, FREEMIX), second row are the associated values
-    /usr/gitc/VerifyBamID \
+    ~{verifybamid_cmd} \
     --Verbose \
     --NumPC 4 \
     --Output ~{output_prefix} \

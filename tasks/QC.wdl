@@ -7,12 +7,14 @@ task CollectQualityYieldMetrics {
     File input_bam
     String metrics_filename
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
+
   }
 
   Int disk_size = ceil(size(input_bam, "GiB")) + 20
 
   command {
-    java -Xms2000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms2000m -jar ~{picard_jar} \
       CollectQualityYieldMetrics \
       INPUT=~{input_bam} \
       OQ=true \
@@ -35,12 +37,13 @@ task CollectUnsortedReadgroupBamQualityMetrics {
     File input_bam
     String output_bam_prefix
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(size(input_bam, "GiB")) + 20
 
   command {
-    java -Xms5000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms5000m -jar ~{picard_jar} \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       OUTPUT=~{output_bam_prefix} \
@@ -85,6 +88,7 @@ task CollectReadgroupBamQualityMetrics {
     File ref_fasta_index
     Boolean collect_gc_bias_metrics = true
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -96,7 +100,7 @@ task CollectReadgroupBamQualityMetrics {
       ~{output_bam_prefix}.gc_bias.pdf \
       ~{output_bam_prefix}.gc_bias.summary_metrics
 
-    java -Xms5000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms5000m -jar ~{picard_jar} \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
@@ -133,6 +137,7 @@ task CollectAggregationMetrics {
     File ref_fasta_index
     Boolean collect_gc_bias_metrics = true
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -146,7 +151,7 @@ task CollectAggregationMetrics {
       ~{output_bam_prefix}.insert_size_metrics \
       ~{output_bam_prefix}.insert_size_histogram.pdf
 
-    java -Xms5000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms5000m -jar ~{picard_jar} \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
@@ -195,6 +200,7 @@ task ConvertSequencingArtifactToOxoG {
     File ref_fasta_index
     Int preemptible_tries
     Int memory_multiplier = 1
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -205,8 +211,8 @@ task ConvertSequencingArtifactToOxoG {
 
   command {
     input_base=$(dirname ~{pre_adapter_detail_metrics})/~{base_name}
-    java -Xms~{java_memory_size}m \
-      -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+
+    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       ConvertSequencingArtifactToOxoG \
       --INPUT_BASE $input_base \
       --OUTPUT_BASE ~{base_name} \
@@ -234,6 +240,7 @@ task CrossCheckFingerprints {
     Int preemptible_tries
     Float lod_threshold
     String cross_check_by
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(total_input_size) + 20
@@ -241,7 +248,7 @@ task CrossCheckFingerprints {
   command <<<
     java -Dsamjdk.buffer_size=131072 \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3000m \
-      -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+      -jar ~{picard_jar} \
       CrosscheckFingerprints \
       OUTPUT=~{metrics_filename} \
       HAPLOTYPE_MAP=~{haplotype_database_file} \
@@ -272,6 +279,7 @@ task CheckFingerprint {
     File? genotypes_index
     String sample
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(size(input_bam, "GiB")) + 20
@@ -283,7 +291,7 @@ task CheckFingerprint {
   command <<<
     java -Dsamjdk.buffer_size=131072 \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3g  \
-      -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+      -jar ~{picard_jar} \
       CheckFingerprint \
       INPUT=~{input_bam} \
       SUMMARY_OUTPUT=~{summary_metrics_location} \
@@ -369,6 +377,7 @@ task ValidateSamFile {
     Int preemptible_tries
     Int memory_multiplier = 1
     Int additional_disk = 20
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -378,7 +387,7 @@ task ValidateSamFile {
   Int java_memory_size = (memory_size - 1) * 1000
 
   command {
-    java -Xms~{java_memory_size}m -jar/home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       ValidateSamFile \
       INPUT=~{input_bam} \
       OUTPUT=~{report_filename} \
@@ -411,13 +420,14 @@ task CollectWgsMetrics {
     File ref_fasta_index
     Int read_length
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
   Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
 
   command {
-    java -Xms2000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms2000m -jar ~{picard_jar} \
       CollectWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -452,6 +462,7 @@ task CollectRawWgsMetrics {
     Int preemptible_tries
     Int memory_multiplier = 1
     Int additional_disk = 20
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
@@ -461,7 +472,7 @@ task CollectRawWgsMetrics {
   String java_memory_size = (memory_size - 1) * 1000
 
   command {
-    java -Xms~{java_memory_size}m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       CollectRawWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -495,6 +506,7 @@ task CollectHsMetrics {
     Int preemptible_tries
     Int memory_multiplier = 1
     Int additional_disk = 20
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
@@ -507,7 +519,7 @@ task CollectHsMetrics {
 
   # There are probably more metrics we want to generate with this tool
   command {
-    java -Xms~{java_memory_size}m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       CollectHsMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
@@ -539,12 +551,13 @@ task CalculateReadGroupChecksum {
     File input_bam_index
     String read_group_md5_filename
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(size(input_bam, "GiB")) + 20
 
   command {
-    java -Xms1000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms1000m -jar ~{picard_jar} \
       CalculateReadGroupChecksum \
       INPUT=~{input_bam} \
       OUTPUT=~{read_group_md5_filename}
@@ -573,14 +586,15 @@ task ValidateVCF {
     File calling_interval_list
     Int preemptible_tries
     Boolean is_gvcf = true
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+#    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String? gatk_cmd = "/usr/local/bin/gatk"
   }
 
-  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
+#  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
  # Int disk_size = ceil(size(input_vcf, "GiB") + size(dbsnp_vcf, "GiB") + ref_size) + 20
 
   command {
-    /home/brugger/bin/gatk --java-options -Xms6000m \
+    ~{gatk_cmd} --java-options -Xms6000m \
       ValidateVariants \
       -V ~{input_vcf} \
       -R ~{ref_fasta} \
@@ -610,12 +624,13 @@ task CollectVariantCallingMetrics {
     File evaluation_interval_list
     Boolean is_gvcf = true
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(size(input_vcf, "GiB") + size(dbsnp_vcf, "GiB")) + 20
 
   command {
-    java -Xms2000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms2000m -jar ~{picard_jar} \
       CollectVariantCallingMetrics \
       INPUT=~{input_vcf} \
       OUTPUT=~{metrics_basename} \

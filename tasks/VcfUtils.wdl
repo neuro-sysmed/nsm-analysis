@@ -8,6 +8,7 @@ task MergeVCFs {
     Array[File] input_vcfs_indexes
     String output_vcf_name
     Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(size(input_vcfs, "GiB") * 2.5) + 10
@@ -15,7 +16,7 @@ task MergeVCFs {
   # Using MergeVcfs instead of GatherVcfs so we can create indices
   # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
   command {
-    java -Xms2000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Xms2000m -jar ~{picard_jar} \
       MergeVcfs \
       -INPUT ~{sep=' -INPUT ' input_vcfs} \
       -OUTPUT ~{output_vcf_name}
@@ -40,13 +41,14 @@ task HardFilterVcf {
     File interval_list
     Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String? gatk_cmd = "/usr/local/bin/gatk"
   }
 
   Int disk_size = ceil(2 * size(input_vcf, "GiB")) + 20
   String output_vcf_name = vcf_basename + ".filtered.vcf.gz"
 
   command {
-     gatk --java-options "-Xms3000m" \
+     ~{gatk_cmd} --java-options "-Xms3000m" \
       VariantFiltration \
       -V ~{input_vcf} \
       -L ~{interval_list} \
@@ -79,6 +81,7 @@ task CNNScoreVariants {
     File ref_dict
     Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String? gatk_cmd = "/usr/local/bin/gatk"
   }
 
   Int disk_size = ceil(size(bamout, "GiB") + size(ref_fasta, "GiB") + (size(input_vcf, "GiB") * 2))
@@ -94,7 +97,7 @@ task CNNScoreVariants {
   String tensor_type = if defined(bamout) then "read-tensor" else "reference"
 
   command {
-     gatk --java-options -Xmx10g CNNScoreVariants \
+     ~{gatk_cmd} --java-options -Xmx10g CNNScoreVariants \
        -V ~{input_vcf} \
        -R ~{ref_fasta} \
        -O ~{output_vcf} \
@@ -136,6 +139,8 @@ task FilterVariantTranches {
     String info_key
     Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    String? gatk_cmd = "/usr/local/bin/gatk"
+
   }
 
   Int disk_size = ceil(size(hapmap_resource_vcf, "GiB") +
@@ -147,7 +152,7 @@ task FilterVariantTranches {
 
   command {
 
-    gatk --java-options -Xmx6g FilterVariantTranches \
+    ~{gatk_cmd} --java-options -Xmx6g FilterVariantTranches \
       -V ~{input_vcf} \
       -O ~{vcf_basename}.filtered.vcf.gz \
       ~{sep=" " prefix("--snp-tranche ", snp_tranches)} \

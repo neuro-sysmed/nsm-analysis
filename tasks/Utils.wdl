@@ -29,12 +29,13 @@ task ScatterIntervalList {
     File interval_list
     Int scatter_count
     Int break_bands_at_multiples_of
+    String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
   command <<<
     set -e
     mkdir out
-    java -Xms1g -jar /usr/gitc/picard.jar \
+    java -Xms1g -jar ~{picard_jar} \
       IntervalListTools \
       SCATTER_COUNT=~{scatter_count} \
       SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \

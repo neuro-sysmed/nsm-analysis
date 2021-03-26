@@ -12,6 +12,8 @@ task FqToBam {
     String? library_name = "NA"
     Int? compression_level = 2
     String? outdir = "."
+    String? picard_jar = "/usr/local/jars/picard.jar"
+
   }
 
   command {
@@ -20,7 +22,7 @@ task FqToBam {
       mkdir "~{outdir}/"
     fi
 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /usr/local/jars/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
       FastqToSam \
       -FASTQ ~{fq_fwd} \
       -FASTQ2 ~{fq_rev} \
