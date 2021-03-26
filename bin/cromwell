@@ -14,12 +14,12 @@ def main():
     parser.add_argument('--java-options', action='append', default=[])
     parser.add_argument('command', nargs="+")
 
-    args = parser.parse_args()
+    args, other_args = parser.parse_known_args()
 
     args.java_options = " ".join(args.java_options)
     args.command = " ".join(args.command)
 
-    run(shlex.split(f"java {args.java_options} -jar {CROMWELL_JAR}  {args.command}"))
+    run(shlex.split(f"java {args.java_options} -jar {CROMWELL_JAR} {args.command} {' '.join(other_args)}"))
 
 
 
