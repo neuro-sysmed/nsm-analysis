@@ -1,32 +1,28 @@
 version 1.0
 
-import "../../../tasks/BamUtils.wdl" as BamUtils
-import "../../../tasks/FqUtils.wdl" as FqUtils
+import "../tasks/BamUtils.wdl" as BamUtils
+import "../tasks/FqUtils.wdl" as FqUtils
+import "../structs/DNASeqStructs.wdl"
 
 
-workflow MergeFqBam {
+workflow MakeUnalignedBam {
 
    input {
       Array[File] bams = []
-#      String? input_dir 
-      Array[Map[String,String]] fqs
+      Array[SampleFQ] sample_fqs
       String output_bam_filename
    }
 
-#   if (defined(input_dir)) {
-#      Array[String] bams = glob("~{input_dir}/*.{mapped_bam_suffix}")
-#   }
 
-
-    scatter (fq_set in fqs) {
+    scatter (sample_fq in sample_fqs) {
 
         call FqUtils.FqToBam as FqToBam {
             input:
-                fq_fwd = fq_set.fwd,
-                fq_rev =  fq_set.rev,
-                output_bam_filename = "~{fq_set.readgroup}.ubam",
-                readgroup = "~{fq_set.readgroup}",
-                sample_name = fq_set.sample_name,
+                fq_fwd = sample_fq.fwd,
+                fq_rev =  sample_fq.rev,
+                output_bam_filename = "~{sample_fq.readgroup}.ubam",
+                readgroup = "~{sample_fq.readgroup}",
+                sample_name = sample_fq.sample_name,
                 outdir = "."
         }
 

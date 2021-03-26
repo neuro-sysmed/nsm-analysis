@@ -39,6 +39,15 @@ struct DNASeqSingleSampleReferences {
   File haplotype_database_file
 }
 
+struct SampleFQ {
+  File fwd
+  File rev
+  String sample_name
+  String readgroup
+
+}
+
+
 struct VariantCallingScatterSettings {
    Int haplotype_scatter_count
    Int break_bands_at_multiples_of

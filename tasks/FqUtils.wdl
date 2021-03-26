@@ -20,7 +20,7 @@ task FqToBam {
       mkdir "~{outdir}/"
     fi
 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /usr/local/jars/picard.jar \
       FastqToSam \
       -FASTQ ~{fq_fwd} \
       -FASTQ2 ~{fq_rev} \

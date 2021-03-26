@@ -169,9 +169,9 @@ task MergeUnalignedBams {
 
     
   command {
-    /home/brugger/bin/samtools merge -n ~{output_bam_basename} ~{sep=' ' bams}
+    /usr/local/bin/samtools merge -n ~{output_bam_basename} ~{sep=' ' bams}
 #    if [~{index}]; then
-#      /home/brugger/bin/samtools index -n ~{output_bam_basename} 
+#      /usr/local/bin/samtools index -n ~{output_bam_basename} 
   }
   output {
     File output_bam = "~{output_bam_basename}"
@@ -210,7 +210,7 @@ task BaseRecalibrator {
   }
 
   command {
-    /home/brugger/bin/gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
+    /usr/local/bin/gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
       -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
       -Xloggc:gc_log.log -Xms5g" \
       BaseRecalibrator \
@@ -272,7 +272,7 @@ task ApplyBQSR {
   }
 
   command {
-    /home/brugger/bin/gatk --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
+    /usr/local/bin/gatk --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
       -XX:+PrintGCDetails -Xloggc:gc_log.log \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Dsamjdk.compression_level=~{compression_level} -Xms3000m" \
       ApplyBQSR \
@@ -313,7 +313,7 @@ task GatherBqsrReports {
   }
 
   command {
-    /home/brugger/bin/gatk --java-options "-Xms3000m" \
+    /usr/local/bin/gatk --java-options "-Xms3000m" \
       GatherBQSRReports \
       -I ~{sep=' -I ' input_bqsr_reports} \
       -O ~{output_report_filename}
@@ -482,7 +482,7 @@ task HaplotypeCaller {
 
   command <<<
     set -e
-    /home/brugger/bin/gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
+    /usr/local/bin/gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
