@@ -29,7 +29,7 @@ task SortSam {
   Int disk_size = ceil(sort_sam_disk_multiplier * size(input_bam, "GiB")) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /usr/local/jars/picard.jar \
       SortSam \
       INPUT=~{input_bam} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -69,7 +69,7 @@ task RevertSam {
       mkdir "~{outdir}/"
     fi
 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar /usr/local/jars/picard.jar \
      RevertSam \
      -I ~{input_bam} \
      -O ~{outdir}/~{output_bam_filename} \
@@ -134,7 +134,7 @@ task MarkDuplicates {
   # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar /usr/local/jars/picard.jar \
       MarkDuplicates \
       INPUT=~{input_bam} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -344,7 +344,7 @@ task GatherSortedBamFiles {
   Int disk_size = ceil(2 * total_input_size) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar /home/brugger/projects/nsm/nsm-analysis/software/picard.jar \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar /usr/local/jars/picard.jar \
       GatherBamFiles \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \

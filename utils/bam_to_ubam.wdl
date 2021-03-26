@@ -1,9 +1,9 @@
 version 1.0
 
-import "../../tasks/BamUtils.wdl" as BamUtils
+import "../tasks/BamUtils.wdl" as BamUtils
 
 
-workflow ToUnmappedBam {
+workflow BamToUnalignedBam {
 
    input {
       Array[String] bams

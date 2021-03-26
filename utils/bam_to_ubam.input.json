@@ -1,10 +1,9 @@
 {
-  "ToUnmappedBam.bams": [
-    "/home/brugger/projects/nsm/nsm-analysis/workflows/utils/bamtoubam/NA12878_PLUMBING.aligned.duplicate_marked.sorted.bam",
-    "/home/brugger/projects/nsm/nsm-analysis/workflows/utils/bamtoubam/NA12878_2.bam"
+  "BamToUnalignedBam.bams": [
+    "../test_data/NA12878.hg38_22.bam"
   ],
-  "ToUnmappedBam.unmapped_bam_suffix": ".ubam",
-  "ToUnmappedBam.mapped_bam_suffix": ".aligned.duplicate_marked.sorted.bam"
+  "BamToUnalignedBam.unmapped_bam_suffix": ".ubam",
+  "BamToUnalignedBam.mapped_bam_suffix": ".hg38_22.bam"
 
 }
   
