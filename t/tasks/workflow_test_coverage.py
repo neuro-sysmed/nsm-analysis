@@ -8,6 +8,8 @@ import pprint as pp
 
 import kbr.file_utils as file_utils
 
+verbose_level = 0
+
 
 def get_tasks(wdl_files:[]) -> {}:
     res = {}
@@ -80,6 +82,40 @@ def find_files(pattern:str, path:str) -> []:
     return files
 
 
+def report_usage(all_tasks, tasks_used):
+    total_tasks = 0
+    tasks_tested = 0
+    not_imported = []
+    used = []
+
+    for wdl_file in all_tasks:
+        if wdl_file not in tasks_used:
+            if verbose_level == 1:
+                not_imported.append(f"{wdl_file}: not imported")
+
+            if verbose_level >= 2:
+                for task in all_tasks[ wdl_file].keys():
+                    used.append(f"{wdl_file}.{task}: Not used")
+            total_tasks += len(all_tasks[wdl_file].keys())
+        else:
+            for task in all_tasks[wdl_file]:
+                total_tasks += 1
+                if task in tasks_used[ wdl_file ]:
+                    if verbose_level >= 2:
+                        used.append(f"{wdl_file}.{task}: Used")
+                    tasks_tested += 1
+                else:
+                    if verbose_level >= 1:
+                        used.append(f"{wdl_file}.{task}: Not used")
+
+    if not_imported != []:
+        print("\n".join(not_imported))
+    if used != []:
+        print("\n".join(used))
+
+    return total_tasks, tasks_tested
+
+
 
 def main():
 
@@ -92,39 +128,20 @@ def main():
 
     args = parser.parse_args()
 
+    global verbose_level
+    verbose_level = args.verbose
+
     if args.included_only:
         files = files_imported(args.test_files)
     else:
         files = find_files("*.wdl", args.path)
 
-    verbose_level = args.verbose
 
     all_tasks = get_tasks(files)
-
     tasks_used = get_tasks_used(args.test_files)
-    total_tasks = 0
-    tasks_tested = 0
-    for wdl_file in all_tasks:
-        if wdl_file not in tasks_used:
-            if verbose_level == 1:
-                print(f"WARM: {wdl_file} not used!")
-            if verbose_level >= 2:
-                for task in all_tasks[ wdl_file].keys():
-                    print(f"{wdl_file}.{task}: Not used")
-            total_tasks += len(all_tasks[wdl_file].keys())
-        else:
-            for task in all_tasks[wdl_file]:
-                total_tasks += 1
-                if task in tasks_used[ wdl_file ]:
-                    if verbose_level >= 2:
-                        print(f"{wdl_file}.{task}: Used")
-                    tasks_tested += 1
-                else:
-                    if verbose_level >= 1:
-                        print(f"{wdl_file}.{task}: Not used")
+    total_tasks, tasks_tested = report_usage(all_tasks, tasks_used)
 
-
-    print("\nCoverage of workflows")
+    print("\nCoverage of workflows:")
     print(f"{tasks_tested} out of {total_tasks} tasks have been used in {len(args.test_files)} workflow(s)")
 
 if __name__ == "__main__":
