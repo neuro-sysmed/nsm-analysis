@@ -8,6 +8,8 @@ workflow versions {
     call Bcftools as Bcftools
     call Star as Star
 #    call Package as Package
+    call Singularity as Singularity
+    call Image as Image
 
     output {
 #        String package  = Package.version
@@ -17,6 +19,8 @@ workflow versions {
         String gatk     = Gatk.version
         String bcftools = Bcftools.version
         String star     = Star.version        
+        String singularity = Singularity.version
+        String image    = Image.version
     }
 }
 
@@ -46,6 +50,39 @@ task Package {
     }
 }
 
+
+task Image {
+    input {
+      String image = "/home/brugger/projects/kbr-tools/nsm-tools.sif"
+    }
+    command {
+        image_version=$(singularity inspect ~{image} 2>&1 | \
+            grep -e 'org.label-schema.usage.singularity.deffile.from' | \
+            perl -pe 's/org.label-schema.usage.singularity.deffile.from: //')
+
+        echo $image_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+task Singularity {
+    input {
+      String singularity_cmd = "/usr/local/bin/singularity"
+    }
+    command {
+        singularity_version=$(~{singularity_cmd} --version 2>&1 | \
+            perl -pe 's/.*version //')
+
+        echo $singularity_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
 
 
 task Bwa {
