@@ -1,52 +1,169 @@
 version 1.0
 
-task {
-    input {
-        String program = 'all'
+workflow versions {
+    call Bwa as Bwa
+    call Samtools as Samtools
+    call Picard as Picard
+    call Gatk as Gatk
+    call Bcftools as Bcftools
+    call Star as Star
+#    call Package as Package
+
+    output {
+#        String package  = Package.version
+        String bwa      = Bwa.version
+        String samtools = Samtools.version
+        String picard   = Picard.version
+        String gatk     = Gatk.version
+        String bcftools = Bcftools.version
+        String star     = Star.version        
     }
+}
+
+
+task Package {
+    input {
+      String version_file = "../version.json"
+    }
+  # returns null for unset keys
+    Map[String, String?] version_map = read_json(version_file)
+
+    String version_str = if defined(version_map['dev']) 
+            then "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}-dev~{version_map['dev']}" 
+            else "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}"
 
     command {
-
-        bwa_bersion=$(~{bwa_cmd} 2>&1 | \
-            grep -e '^Version' | \
-            sed 's/Version: //')
-
-        samtools_version = $(samtools 2>&1  | \
-            egrep Version | \
-            perl -pe 's/Version: (.*?) .*/$1/')
-
-        picard_version = $(picard MarkDuplicates --version | perl -pe 's/Version://')
-
-        bcftools_version = $(bcftools 2>&1 | \
-            egrep Vers | \
-            perl -pe 's/Version: (.*?) .*/$1/')
-
-
-        gatk_version = $(gatk --version | \
-            egrep "The Genome Analysis Toolkit" | \
-            perl -pe 's/.* v//')
-
-        star_version = $(STAR | \
-            egrep version | \
-            perl -pe 's/.* version=//')
-
-    }
-
-    runtime {
-        "image":
     }
 
 
     output {
-        String bwa       = bwa_version
-        String samtools  = samtools_version
-        String bcftools  = bcftools_version
-        String gatk      = gatk_version
-        String picard    = picard_version
-        String star      = star_version
+        String version = version_str
     }
 
-
-
-
+    parameter_meta {
+      # inputs
+      version_file: {description: "version file for the repo", category: "optional"}
+    }
 }
+
+
+
+task Bwa {
+    input {
+        String bwa_cmd = '/usr/local/bin/bwa'
+        String? image
+    }
+
+    command {
+        bwa_version=$(~{bwa_cmd} 2>&1 | \
+            grep -e '^Version' | \
+            sed 's/Version: //')
+
+        echo $bwa_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+
+task Samtools {
+    input {
+        String samtools_cmd = '/usr/local/bin/samtools'
+        String? image
+    }
+
+    command {
+         samtools_version=$(~{samtools_cmd} 2>&1  | \
+             egrep Version | \
+             perl -pe 's/Version: (.*?) .*/$1/')
+
+        echo $samtools_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+
+task Picard {
+    input {
+        String picard_cmd = '/usr/local/bin/picard'
+        String? image
+    }
+
+    command {
+        picard_version=$(~{picard_cmd} MarkDuplicates --version 2>&1 | \
+            egrep Version | \
+            perl -pe 's/Version://')
+
+        echo $picard_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+task Gatk {
+    input {
+        String gatk_cmd = '/usr/local/bin/gatk'
+        String? image
+    }
+
+    command {
+        gatk_version=$(~{gatk_cmd} --version | \
+             egrep "The Genome Analysis Toolkit" | \
+             perl -pe 's/.* v//')
+
+        echo $gatk_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+task Star {
+    input {
+        String star_cmd = '/usr/local/bin/STAR'
+        String? image
+    }
+
+    command {
+         star_version=$(~{star_cmd} | \
+             egrep version | \
+             perl -pe 's/.* version=//')
+
+        echo $star_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+task Bcftools {
+    input {
+#        String bcftools_cmd = '/usr/local/bin/bcftools'
+        String? image
+    }
+
+    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
+
+    command {
+        bcftools_version=$(~{bcftools_cmd} 2>&1 | \
+             egrep Vers | \
+             perl -pe 's/Version: (.*?) .*/$1/')
+
+        echo $bcftools_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
+
