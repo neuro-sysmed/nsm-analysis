@@ -1,0 +1,12 @@
+{
+    "DNAPreprocessing.sample_and_unmapped_bams": {
+      "sample_name": "NA12878",
+      "base_file_name": "NA12878",
+      "fwd_reads": "SRR7646190_1.fastq.gz",
+      "rev_reads": "SRR7646190_2.fastq.gz",
+      "gtf": "~/projects/nsm/hg38_22/gencode.v29_22.annotation.gtf",
+      "genome_dir": " ~/projects/nsm/hg38_22/STAR/"
+    }
+
+  
+}
