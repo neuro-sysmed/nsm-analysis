@@ -37,7 +37,6 @@ task FqToBam {
 #    disks: "local-disk " + disk_size + " HDD"
     cpu: "1"
     memory: "5000 MiB"
-#    preemptible: preemptible_tries
   }
   output {
     File output_bam = "~{outdir}/~{output_bam_filename}"

@@ -13,12 +13,11 @@ task BwaMem {
     File input_bam
     String? bwa_cmd = "/usr/local/bin/bwa"
     String? picard_jar = "/usr/local/jars/picard.jar"
-    String output_bam_basename
+    String bam_basename
 
     ReferenceFasta reference_fasta
 
     Int compression_level
-    Int preemptible_tries
     Boolean hard_clip_reads = false
   }
 
@@ -30,7 +29,7 @@ task BwaMem {
   Float disk_multiplier = 2.5
   Int disk_size = ceil(unmapped_bam_size + bwa_ref_size + (disk_multiplier * unmapped_bam_size) + 20)
 
-  String bwa_commandline = " mem -K 100000000 -p -v 3 -t 8 -Y $bash_ref_fasta"
+  String bwa_commandline = " mem -K 100000000 -p -v 3 -t 2 -Y $bash_ref_fasta"
 
   command <<<
 
@@ -59,7 +58,7 @@ task BwaMem {
         FASTQ=/dev/stdout \
         INTERLEAVE=true \
         NON_PF=true | \
-      ~{bwa_cmd} ~{bwa_commandline} /dev/stdin - 2> >(tee ~{output_bam_basename}.bwa.stderr.log >&2) | \
+      ~{bwa_cmd} ~{bwa_commandline} /dev/stdin - 2> >(tee ~{bam_basename}.bwa.stderr.log >&2) | \
       java -Dsamjdk.compression_level=~{compression_level} -Xms1000m -Xmx1000m -jar ~{picard_jar} \
         MergeBamAlignment \
         VALIDATION_STRINGENCY=SILENT \
@@ -69,7 +68,7 @@ task BwaMem {
         ATTRIBUTES_TO_REMOVE=MD \
         ALIGNED_BAM=/dev/stdin \
         UNMAPPED_BAM=~{input_bam} \
-        OUTPUT=~{output_bam_basename}.bam \
+        OUTPUT=~{bam_basename}.bam \
         REFERENCE_SEQUENCE=~{reference_fasta.ref_fasta} \
         PAIRED_RUN=true \
         SORT_ORDER="unsorted" \
@@ -91,7 +90,7 @@ task BwaMem {
         UNMAP_CONTAMINANT_READS=true \
         ADD_PG_TAG_TO_READS=false
 
- #     grep -m1 "read .* ALT contigs" ~{output_bam_basename}.bwa.stderr.log | \
+ #     grep -m1 "read .* ALT contigs" ~{bam_basename}.bwa.stderr.log | \
  #     grep -v "read 0 ALT contigs"
 
     # else reference_fasta.ref_alt is empty or could not be found
@@ -101,14 +100,45 @@ task BwaMem {
   >>>
   runtime {
 #    docker: "bruggerk/nsm-tools:latest"
-#    preemptible: preemptible_tries
 #    memory: "14 GiB"
 #    cpu: "4"
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File output_aligned_bam = "~{output_bam_basename}.bam"
-    File bwa_stderr_log = "~{output_bam_basename}.bwa.stderr.log"
+    File aligned_bam = "~{bam_basename}.bam"
+    File bwa_stderr_log = "~{bam_basename}.bwa.stderr.log"
   }
 }
 
+task Star {
+  input {
+      String base_file_name
+      File fwd_reads
+      File rev_reads
+      File gtf
+      String genome_dir
+      String? star_cmd = "/usr/local/bin/STAR"
+      Int? threads = 4
+  }
+
+  command {
+    ~{star_cmd} --outSAMattributes All --outSAMtype BAM SortedByCoordinate \
+       --quantMode GeneCounts \
+       --readFilesCommand zcat \
+       --runThreadN ~{threads} \
+       --sjdbGTFfile ~{gtf} \
+       --outReadsUnmapped Fastx \
+       --outMultimapperOrder Random \
+       --outWigType wiggle \
+       --genomeDir ~{genome_dir} \
+       --readFilesIn ~{fwd_reads} ~{rev_reads} \
+       --outFileNamePrefix \
+       ~{base_file_name}
+  }
+
+  output {
+    File bam_file = "~{base_file_name}.bam"
+  }
+
+
+}

@@ -1,12 +1,12 @@
 version 1.0
 
-import "../../structs/DNASeqStructs.wdl" 
+import "../structs/DNASeqStructs.wdl" 
 
 #import "../../tasks/Alignment.wdl" as Alignment
-import "../../tasks/QC.wdl" as QC
-import "../../tasks/BamUtils.wdl" as BamUtils
-import "../../tasks/Utils.wdl" as Utils
-import "../../tasks/VcfUtils.wdl" as VcfUtils
+import "../tasks/QC.wdl" as QC
+import "../tasks/BamUtils.wdl" as BamUtils
+import "../tasks/Utils.wdl" as Utils
+import "../tasks/VcfUtils.wdl" as VcfUtils
 
 
 
@@ -17,7 +17,6 @@ import "../../tasks/VcfUtils.wdl" as VcfUtils
 workflow VariantCalling {
 
    input {
-      Map[String,String] sample
       DNASeqSingleSampleReferences references
       VariantCallingScatterSettings scatter_settings
 
@@ -34,7 +33,6 @@ workflow VariantCalling {
 #    File dbsnp_vcf_index
     String base_file_name
     String final_vcf_base_name
-    Int agg_preemptible_tries 
     Boolean make_gvcf = true
    }
 
@@ -43,7 +41,7 @@ workflow VariantCalling {
   # Perform variant calling on the sub-intervals, and then gather the results
   call Utils.ScatterIntervalList as ScatterIntervalList {
     input:
-      interval_list = references.calling_interval_list,
+      interval_list = references.wgs_calling_interval_list,
       scatter_count = scatter_settings.haplotype_scatter_count,
       break_bands_at_multiples_of = scatter_settings.break_bands_at_multiples_of
   }
@@ -70,7 +68,6 @@ workflow VariantCalling {
           ref_fasta_index = references.reference_fasta.ref_fasta_index,
           hc_scatter = hc_divisor,
           make_gvcf = true,
-          preemptible_tries = agg_preemptible_tries
        }
 
     File vcfs_to_merge = select_first([HaplotypeCaller.output_vcf])
@@ -84,7 +81,6 @@ workflow VariantCalling {
       input_vcfs = vcfs_to_merge,
       input_vcfs_indexes = vcf_indices_to_merge,
       output_vcf_name = final_vcf_base_name + merge_suffix,
-      preemptible_tries = agg_preemptible_tries
   }
 
   # Validate the (g)VCF output of HaplotypeCaller
@@ -97,9 +93,8 @@ workflow VariantCalling {
       ref_fasta = references.reference_fasta.ref_fasta,
       ref_fasta_index = references.reference_fasta.ref_fasta_index,
       ref_dict = references.reference_fasta.ref_dict,
-      calling_interval_list = references.calling_interval_list,
+      calling_interval_list = references.wgs_calling_interval_list,
       is_gvcf = true,
-      preemptible_tries = agg_preemptible_tries
   }
 
   # QC the (g)VCF
@@ -113,7 +108,6 @@ workflow VariantCalling {
       ref_dict = references.reference_fasta.ref_dict,
       evaluation_interval_list = references.evaluation_interval_list,
       is_gvcf = true,
-      preemptible_tries = agg_preemptible_tries
   }
 
   output {

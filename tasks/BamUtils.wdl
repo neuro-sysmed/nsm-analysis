@@ -20,7 +20,6 @@ task SortSam {
   input {
     File input_bam
     String output_bam_basename
-    Int preemptible_tries
     Int compression_level
     String? picard_jar = "/usr/local/jars/picard.jar"
 
@@ -46,7 +45,6 @@ task SortSam {
 #    disks: "local-disk " + disk_size + " HDD"
     cpu: "1"
     memory: "5000 MiB"
-    preemptible: preemptible_tries
   }
   output {
     File output_bam = "~{output_bam_basename}.bam"
@@ -55,6 +53,32 @@ task SortSam {
   }
 }
 
+# Sort BAM file by coordinate order
+task Index {
+  input {
+    File basename
+    Int compression_level =5
+    String? picard_jar = "/usr/local/jars/picard.jar"
+  }
+
+  command {
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+      BuildBamIndex \
+      --INPUT "~{basename}.bam" \
+      --CREATE_MD5_FILE true 
+
+  }
+  runtime {
+#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
+#    disks: "local-disk " + disk_size + " HDD"
+    cpu: "1"
+    memory: "5000 MiB"
+  }
+  output {
+    File output_bam_index = "~{basename}.bai"
+    File output_bam_md5 = "~{basename}.bam.md5"
+  }
+}
 
 
 task RevertSam {
@@ -87,14 +111,14 @@ task RevertSam {
      -SORT_ORDER queryname \
      -RESTORE_ORIGINAL_QUALITIES true \
      -REMOVE_DUPLICATE_INFORMATION true \
-     -REMOVE_ALIGNMENT_INFORMATION true
+     -REMOVE_ALIGNMENT_INFORMATION true \
+     -VALIDATION_STRINGENCY LENIENT
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
     cpu: "1"
     memory: "5000 MiB"
-#    preemptible: preemptible_tries
   }
   output {
     File output_bam = "~{outdir}/~{output_bam_filename}"
@@ -112,7 +136,63 @@ task MarkDuplicates {
     String metrics_filename
 #    Float total_input_size
     Int compression_level
-    Int preemptible_tries
+    String? picard_jar = "/usr/local/jars/picard.jar"
+
+    # The program default for READ_NAME_REGEX is appropriate in nearly every case.
+    # Sometimes we wish to supply "null" in order to turn off optical duplicate detection
+    # This can be desirable if you don't mind the estimated library size being wrong and optical duplicate detection is taking >7 days and failing
+    String? read_name_regex
+    Int memory_multiplier = 1
+    Int additional_disk = 20
+
+    Float? sorting_collection_size_ratio
+  }
+
+  # The merged bam will be smaller than the sum of the parts so we need to account for the unmerged inputs and the merged output.
+  # Mark Duplicates takes in as input readgroup bams and outputs a slightly smaller regated bam. Giving .25 as wiggleroom
+  Float md_disk_multiplier = 3
+#  Int disk_size = ceil(md_disk_multiplier * total_input_size) + additional_disk
+
+  Float memory_size = 7.5 * memory_multiplier
+  Int java_memory_size = (ceil(memory_size) - 2)
+
+  # Task is assuming query-sorted input so that the Secondary and Supplementary reads get marked correctly
+  # This works because the output of BWA is query-grouped and therefore, so is the output of MergeBamAlignment.
+  # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
+
+  command {
+    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
+      MarkDuplicates \
+      INPUT=~{input_bam} \
+      OUTPUT=~{output_bam_basename}.bam \
+      METRICS_FILE=~{metrics_filename} \
+      VALIDATION_STRINGENCY=SILENT \
+      ~{"READ_NAME_REGEX=" + read_name_regex} \
+      ~{"SORTING_COLLECTION_SIZE_RATIO=" + sorting_collection_size_ratio} \
+      OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500 \
+      ASSUME_SORT_ORDER="queryname" \
+      CLEAR_DT="false" \
+      ADD_PG_TAG_TO_READS=false
+  }
+  runtime {
+#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
+#    memory: "~{memory_size} GiB"
+#    disks: "local-disk " + disk_size + " HDD"
+  }
+  output {
+    File output_bam = "~{output_bam_basename}.bam"
+    File duplicate_metrics = "~{metrics_filename}"
+  }
+}
+
+# Mark duplicate reads to avoid counting non-independent observations
+task MergeAndMarkDuplicates {
+  input {
+    Array[File] input_bams
+    String output_bam_basename
+    String metrics_filename
+#    Float total_input_size
+    Int compression_level
     String? picard_jar = "/usr/local/jars/picard.jar"
 
     # The program default for READ_NAME_REGEX is appropriate in nearly every case.
@@ -140,7 +220,7 @@ task MarkDuplicates {
   command {
     java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
       MarkDuplicates \
-      INPUT=~{input_bam} \
+      INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
       METRICS_FILE=~{metrics_filename} \
       VALIDATION_STRINGENCY=SILENT \
@@ -153,7 +233,6 @@ task MarkDuplicates {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    preemptible: preemptible_tries
 #    memory: "~{memory_size} GiB"
 #    disks: "local-disk " + disk_size + " HDD"
   }
@@ -186,6 +265,52 @@ task MergeUnalignedBams {
 }
 
 
+task BamAddProgramLine {
+  input {
+    File bamfile
+    String id
+    String version
+    String? name
+    String? command_line
+    String? description
+    String samtools_cmd = '/usr/local/bin/samtools'
+  }
+
+  command {
+    set -e
+    ~{samtools_cmd} view --no-PG -H ~{bamfile} > ~{bamfile}.header
+
+    echo -en "@PG\tID:~{id}\tVN:~{version}" >> ~{bamfile}.header
+
+    if [ ! -z ~{name}]
+    then
+      echo -en "\tPN:~{name}" >> ~{bamfile}.header
+    fi
+    
+    if [ ! -z ~{command_line}]
+    then
+      echo -en "\tCL:~{command_line}" >> ~{bamfile}.header
+    fi
+
+    if [ ! -z ~{description}]
+    then
+      echo -en "\tDS:~{description}" >> ~{bamfile}.header
+    fi
+
+    echo  "" >> ~{bamfile}.header
+
+    ~{samtools_cmd} reheader -P ~{bamfile}.header ~{bamfile} > ~{bamfile}.reheadered
+    cp ~{bamfile}.reheadered ~{bamfile}
+
+  }
+
+  output {
+    File output_bam = bamfile
+  }
+
+}
+
+
 # Generate Base Quality Score Recalibration (BQSR) model
 task BaseRecalibrator {
   input {
@@ -201,7 +326,6 @@ task BaseRecalibrator {
     File ref_fasta
     File ref_fasta_index
     Int bqsr_scatter
-    Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     String gatk_cmd = "/usr/local/bin/gatk"
   }
@@ -217,9 +341,7 @@ task BaseRecalibrator {
   }
 
   command {
-    ~{gatk_cmd} --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -XX:+PrintFlagsFinal \
-      -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
-      -Xloggc:gc_log.log -Xms5g" \
+    ~{gatk_cmd} --java-options -Xms5g \
       BaseRecalibrator \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
@@ -231,8 +353,7 @@ task BaseRecalibrator {
   }
   runtime {
     #docker: gatk_docker
-    preemptible: preemptible_tries
-    memory: "6 GiB"
+    memory: "2 GiB"
     bootDiskSizeGb: 15
     disks: "local-disk " + disk_size + " HDD"
   }
@@ -257,7 +378,6 @@ task ApplyBQSR {
     File ref_fasta_index
     Int compression_level
     Int bqsr_scatter
-    Int preemptible_tries
     Int memory_multiplier = 1
     Int additional_disk = 20
     Boolean bin_base_qualities = true
@@ -279,9 +399,7 @@ task ApplyBQSR {
   }
 
   command {
-    ~{gatk_cmd} --java-options "-XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps \
-      -XX:+PrintGCDetails -Xloggc:gc_log.log \
-      -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Dsamjdk.compression_level=~{compression_level} -Xms3000m" \
+    ~{gatk_cmd} --java-options "-Dsamjdk.compression_level=~{compression_level} -Xms3000m" \
       ApplyBQSR \
       --create-output-bam-md5 \
       --add-output-sam-program-record \
@@ -299,7 +417,6 @@ task ApplyBQSR {
   }
   runtime {
     #docker: gatk_docker
-    preemptible: preemptible_tries
     memory: "~{memory_size} MiB"
     bootDiskSizeGb: 15
     disks: "local-disk " + disk_size + " HDD"
@@ -315,7 +432,6 @@ task GatherBqsrReports {
   input {
     Array[File] input_bqsr_reports
     String output_report_filename
-    Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     String gatk_cmd = '/usr/local/bin/gatk'
   }
@@ -328,7 +444,6 @@ task GatherBqsrReports {
     }
   runtime {
     #docker: gatk_docker
-    preemptible: preemptible_tries
     memory: "3500 MiB"
     bootDiskSizeGb: 15
     disks: "local-disk 20 HDD"
@@ -345,7 +460,6 @@ task GatherSortedBamFiles {
     String output_bam_basename
     Float total_input_size
     Int compression_level
-    Int preemptible_tries
     String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
@@ -362,7 +476,6 @@ task GatherSortedBamFiles {
     }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    preemptible: preemptible_tries
     memory: "3 GiB"
     disks: "local-disk " + disk_size + " HDD"
   }
@@ -381,7 +494,6 @@ task GatherUnsortedBamFiles {
     String output_bam_basename
     Float total_input_size
     Int compression_level
-    Int preemptible_tries
     String? picard_jar = "/usr/local/jars/picard.jar"
   }
 
@@ -397,8 +509,7 @@ task GatherUnsortedBamFiles {
       CREATE_MD5_FILE=false
     }
   runtime {
-    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    preemptible: preemptible_tries
+#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
     memory: "3 GiB"
     disks: "local-disk " + disk_size + " HDD"
   }
@@ -414,7 +525,6 @@ task GenerateSubsettedContaminationResources {
     File contamination_sites_ud
     File contamination_sites_bed
     File contamination_sites_mu
-    Int preemptible_tries
   }
 
   String output_ud = bait_set_name + "." + basename(contamination_sites_ud)
@@ -447,10 +557,9 @@ task GenerateSubsettedContaminationResources {
 
   >>>
   runtime {
-    preemptible: preemptible_tries
     memory: "3.5 GiB"
     disks: "local-disk 10 HDD"
-    docker: "us.gcr.io/broad-gotc-prod/bedtools:2.27.1"
+#    docker: "us.gcr.io/broad-gotc-prod/bedtools:2.27.1"
   }
   output {
     File subsetted_contamination_ud = output_ud
@@ -471,7 +580,6 @@ task HaplotypeCaller {
     File ref_fasta_index
     Float? contamination
     Boolean make_gvcf
-    Int preemptible_tries
     Int? hc_scatter = 199
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     String gatk_cmd = "/usr/local/bin/gatk"
@@ -493,7 +601,7 @@ task HaplotypeCaller {
 
   command <<<
     set -e
-    ~{gatk_cmd} --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
+    ~{gatk_cmd} --java-options "-Xms1000m " \
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
@@ -502,7 +610,8 @@ task HaplotypeCaller {
       -contamination ~{default=0 contamination} \
       -G StandardAnnotation -G StandardHCAnnotation ~{true="-G AS_StandardAnnotation" false="" make_gvcf} \
       -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 \
-      ~{true="-ERC GVCF" false="" make_gvcf}
+      ~{true="-ERC GVCF" false="" make_gvcf} \
+      --add-output-vcf-command-line
 
     # Cromwell doesn't like optional task outputs, so we have to touch this file.
     touch ~{vcf_basename}.bamout.bam
@@ -510,7 +619,6 @@ task HaplotypeCaller {
 
   runtime {
 #    docker: gatk_docker
-    preemptible: preemptible_tries
     memory: "6.5 GiB"
     cpu: "2"
     bootDiskSizeGb: 15
@@ -549,7 +657,6 @@ task CheckContamination {
     File ref_fasta
     File ref_fasta_index
     String output_prefix
-    Int preemptible_tries
     Float contamination_underestimation_factor
     Boolean disable_sanity_check = false
     String verifybamid_cmd = "/usr/local/bin/VerifyBamID"
@@ -598,10 +705,9 @@ task CheckContamination {
     CODE
   >>>
   runtime {
-    preemptible: preemptible_tries
     memory: "7.5 GiB"
     disks: "local-disk " + disk_size + " HDD"
-    docker: "us.gcr.io/broad-gotc-prod/verify-bam-id:c1cba76e979904eb69c31520a0d7f5be63c72253-1553018888"
+#    docker: "us.gcr.io/broad-gotc-prod/verify-bam-id:c1cba76e979904eb69c31520a0d7f5be63c72253-1553018888"
     cpu: 2
   }
   output {

@@ -1,10 +1,9 @@
 version 1.0
 
 struct SampleAndUnmappedBams {
-  String base_file_name
+  String base_filename
   String? final_gvcf_base_name
-  Array[File] flowcell_unmapped_bams
-  String unmapped_bam
+  Array[File] unmapped_bams
   String sample_name
   String unmapped_bam_suffix
 }
@@ -24,7 +23,8 @@ struct DNASeqSingleSampleReferences {
   File contamination_sites_ud
   File contamination_sites_bed
   File contamination_sites_mu
-  File calling_interval_list
+  File wgs_calling_interval_list
+  File exome_calling_interval_list
 
   ReferenceFasta reference_fasta
 

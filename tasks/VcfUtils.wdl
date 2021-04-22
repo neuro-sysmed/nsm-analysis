@@ -7,8 +7,7 @@ task MergeVCFs {
     Array[File] input_vcfs
     Array[File] input_vcfs_indexes
     String output_vcf_name
-    Int preemptible_tries
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Int disk_size = ceil(size(input_vcfs, "GiB") * 2.5) + 10
@@ -23,7 +22,6 @@ task MergeVCFs {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    preemptible: preemptible_tries
     memory: "3 GiB"
     disks: "local-disk ~{disk_size} HDD"
   }
@@ -39,9 +37,8 @@ task HardFilterVcf {
     File input_vcf_index
     String vcf_basename
     File interval_list
-    Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
-    String? gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "/usr/local/bin/gatk"
   }
 
   Int disk_size = ceil(2 * size(input_vcf, "GiB")) + 20
@@ -61,8 +58,7 @@ task HardFilterVcf {
     File output_vcf_index = "~{output_vcf_name}.tbi"
   }
   runtime {
-    docker: gatk_docker
-    preemptible: preemptible_tries
+#    docker: gatk_docker
     memory: "3 GiB"
     bootDiskSizeGb: 15
     disks: "local-disk " + disk_size + " HDD"
@@ -79,9 +75,8 @@ task CNNScoreVariants {
     File ref_fasta
     File ref_fasta_index
     File ref_dict
-    Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
-    String? gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "/usr/local/bin/gatk"
   }
 
   Int disk_size = ceil(size(bamout, "GiB") + size(ref_fasta, "GiB") + (size(input_vcf, "GiB") * 2))
@@ -111,8 +106,7 @@ task CNNScoreVariants {
   }
 
   runtime {
-    docker: gatk_docker
-    preemptible: preemptible_tries
+#    docker: gatk_docker
     memory: "15 GiB"
     cpu: "2"
     bootDiskSizeGb: 15
@@ -137,9 +131,8 @@ task FilterVariantTranches {
     File dbsnp_resource_vcf
     File dbsnp_resource_vcf_index
     String info_key
-    Int preemptible_tries
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
-    String? gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "/usr/local/bin/gatk"
 
   }
 
@@ -175,7 +168,6 @@ task FilterVariantTranches {
     cpu: "2"
     bootDiskSizeGb: 15
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptible_tries
-    docker: gatk_docker
+#    docker: gatk_docker
   }
 }
