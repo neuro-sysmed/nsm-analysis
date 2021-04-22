@@ -1,0 +1,10 @@
+{
+  "BamToUnalignedBam.bams": [
+    "project.NIST_NIST7035_H7AP8ADXX_TAAGGCGA_1_NA12878.bwa.markDuplicates.bam",
+    "project.NIST_NIST7035_H7AP8ADXX_TAAGGCGA_2_NA12878.bwa.markDuplicates.bam"
+  ],
+  "BamToUnalignedBam.unmapped_bam_suffix": ".ubam",
+  "BamToUnalignedBam.mapped_bam_suffix": ".bwa.markDuplicates.bam"
+
+}
+  

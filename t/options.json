@@ -1,0 +1,8 @@
+{
+    "final_workflow_outputs_dir": "outputs",
+    "use_relative_output_paths": true,
+    "write_to_cache": true,
+    "read_from_cache": true,
+    "final_workflow_log_dir_not_used": "../wf_logs",
+    "final_call_logs_dir_not_used": "../call_logs"
+}
