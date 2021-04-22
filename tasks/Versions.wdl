@@ -1,18 +1,18 @@
 version 1.0
 
-workflow versions {
+workflow Versions {
     call Bwa as Bwa
     call Samtools as Samtools
     call Picard as Picard
     call Gatk as Gatk
     call Bcftools as Bcftools
     call Star as Star
-#    call Package as Package
+    call Package as Package
     call Singularity as Singularity
     call Image as Image
 
     output {
-#        String package  = Package.version
+        String package  = Package.version
         String bwa      = Bwa.version
         String samtools = Samtools.version
         String picard   = Picard.version
@@ -27,7 +27,7 @@ workflow versions {
 
 task Package {
     input {
-      String version_file = "../version.json"
+      String version_file = "../../version.json"
     }
   # returns null for unset keys
     Map[String, String?] version_map = read_json(version_file)
@@ -133,7 +133,7 @@ task Picard {
 
     command {
         picard_version=$(~{picard_cmd} MarkDuplicates --version 2>&1 | \
-            egrep Version | \
+            egrep ^Version | \
             perl -pe 's/Version://')
 
         echo $picard_version
