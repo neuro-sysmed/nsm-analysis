@@ -87,7 +87,7 @@ workflow DNAPreprocessing {
 
    call BamUtils.BamAddProgramLine as BamAddPipelineVersion {
       input:
-         bamfile = BamAddImagesamtooVersion.output_bam,
+         bamfile = BamAddImageVersion.output_bam,
          id = 'nsm-analysis',
          version = Versions.package
 

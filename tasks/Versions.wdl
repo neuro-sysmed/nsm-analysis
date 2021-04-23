@@ -55,12 +55,17 @@ task Image {
     input {
       String image = "/home/brugger/projects/kbr-tools/nsm-tools.sif"
     }
+
     command {
         image_version=$(singularity inspect ~{image} 2>&1 | \
             grep -e 'org.label-schema.usage.singularity.deffile.from' | \
             perl -pe 's/org.label-schema.usage.singularity.deffile.from: //')
 
         echo $image_version
+    }
+
+    runtime {
+        backend: Local
     }
 
     output {
@@ -72,11 +77,16 @@ task Singularity {
     input {
       String singularity_cmd = "/usr/local/bin/singularity"
     }
+
     command {
         singularity_version=$(~{singularity_cmd} --version 2>&1 | \
             perl -pe 's/.*version //')
 
         echo $singularity_version
+    }
+
+    runtime {
+        backend: Local
     }
 
     output {
@@ -184,11 +194,11 @@ task Star {
 
 task Bcftools {
     input {
-#        String bcftools_cmd = '/usr/local/bin/bcftools'
+        String bcftools_cmd = '/usr/local/bin/bcftools'
         String? image
     }
 
-    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
+#    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
 
     command {
         bcftools_version=$(~{bcftools_cmd} 2>&1 | \

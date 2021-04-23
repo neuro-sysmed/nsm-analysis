@@ -2,7 +2,8 @@
     "DNAPreprocessing.sample_and_unmapped_bams": {
       "sample_name": "NA12878",
       "base_filename": "NA12878",
-      "unmapped_bams": [
+      "unmapped_bams": [ 
+        "../../../test_data/exome.ubam",
         "../../../test_data/exome.ubam"
       ],
       "final_gvcf_base_name": "NA12878",
