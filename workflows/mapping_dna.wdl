@@ -182,6 +182,7 @@ workflow DNAPreprocessing {
    # picks first non null value, so if recalibration is done this will be the first one
    File aligned_bam       = select_first([GatherBamFiles.output_bam, SortBam.output_bam])
    File aligned_bam_index = select_first([GatherBamFiles.output_bam_index, SortBam.output_bam_index ])
+   File aligned_bam_md5 = select_first([GatherBamFiles.output_bam_md5, SortBam.output_bam_md5 ])
 
    call AggregatedBamQC.AggregatedBamQC {
     input:
@@ -237,36 +238,52 @@ workflow DNAPreprocessing {
   output {
 
       # Bam, index and md5 files
-      File output_bam = SortBam.output_bam
-      File output_bam_index = SortBam.output_bam_index
-      File output_bam_md5 = SortBam.output_bam_md5
+      File output_bam       = aligned_bam
+      File output_bam_index = aligned_bam_index
+      File output_bam_md5   = aligned_bam_md5
+
+      File metrics_duplicates = MarkDuplicates.duplicate_metrics
 
 
       #QC outputs
-#      Array[File] unsorted_read_group_base_distribution_by_cycle_pdf = UnmappedBamToAlignedBam.unsorted_read_group_base_distribution_by_cycle_pdf
-#      Array[File] unsorted_read_group_base_distribution_by_cycle_metrics = UnmappedBamToAlignedBam.unsorted_read_group_base_distribution_by_cycle_metrics
-#      Array[File] unsorted_read_group_insert_size_histogram_pdf = UnmappedBamToAlignedBam.unsorted_read_group_insert_size_histogram_pdf
-#      Array[File] unsorted_read_group_insert_size_metrics = UnmappedBamToAlignedBam.unsorted_read_group_insert_size_metrics
-#      Array[File] unsorted_read_group_quality_by_cycle_pdf = UnmappedBamToAlignedBam.unsorted_read_group_quality_by_cycle_pdf
-#      Array[File] unsorted_read_group_quality_by_cycle_metrics = UnmappedBamToAlignedBam.unsorted_read_group_quality_by_cycle_metrics
-#      Array[File] unsorted_read_group_quality_distribution_pdf = UnmappedBamToAlignedBam.unsorted_read_group_quality_distribution_pdf
-#      Array[File] unsorted_read_group_quality_distribution_metrics = UnmappedBamToAlignedBam.unsorted_read_group_quality_distribution_metrics
+      Array[File] qc_quality_yield_metrics = CollectQualityYieldMetrics.quality_yield_metrics
 
-#      File unsorted_base_distribution_by_cycle_pdf = CollectUnsortedReadgroupBamQualityMetrics.base_distribution_by_cycle_pdf
-#      File unsorted_base_distribution_by_cycle_metrics = CollectUnsortedReadgroupBamQualityMetrics.base_distribution_by_cycle_metrics
-#      File unsorted_insert_size_histogram_pdf = CollectUnsortedReadgroupBamQualityMetrics.insert_size_histogram_pdf
-#      File unsorted_insert_size_metrics = CollectUnsortedReadgroupBamQualityMetrics.insert_size_metrics
-#      File unsorted_quality_by_cycle_pdf = CollectUnsortedReadgroupBamQualityMetrics.quality_by_cycle_pdf
-#      File unsorted_quality_by_cycle_metrics = CollectUnsortedReadgroupBamQualityMetrics.quality_by_cycle_metrics
-#      File unsorted_quality_distribution_pdf = CollectUnsortedReadgroupBamQualityMetrics.quality_distribution_pdf
-#      File unsorted_quality_distribution_metrics = CollectUnsortedReadgroupBamQualityMetrics.quality_distribution_metrics
-#      File quality_yield_metrics = CollectQualityYieldMetrics.quality_yield_metrics
-      # Misc processing files
-      File duplicate_metrics = MarkDuplicates.duplicate_metrics
-      File? rawwgs_metrics = CollectRawWgsMetrics.metrics
+      Array[File] qc_unsorted_base_distribution_by_cycle_pdf     = CollectUnsortedReadgroupBamQualityMetrics.base_distribution_by_cycle_pdf
+      Array[File] qc_unsorted_base_distribution_by_cycle_metrics = CollectUnsortedReadgroupBamQualityMetrics.base_distribution_by_cycle_metrics
+      Array[File] qc_unsorted_insert_size_histogram_pdf          = CollectUnsortedReadgroupBamQualityMetrics.insert_size_histogram_pdf
+      Array[File] qc_unsorted_insert_size_metrics                = CollectUnsortedReadgroupBamQualityMetrics.insert_size_metrics
+      Array[File] qc_unsorted_quality_by_cycle_pdf               = CollectUnsortedReadgroupBamQualityMetrics.quality_by_cycle_pdf
+      Array[File] qc_unsorted_quality_by_cycle_metrics           = CollectUnsortedReadgroupBamQualityMetrics.quality_by_cycle_metrics
+      Array[File] qc_unsorted_quality_distribution_pdf           = CollectUnsortedReadgroupBamQualityMetrics.quality_distribution_pdf
+      Array[File] qc_unsorted_quality_distribution_metrics       = CollectUnsortedReadgroupBamQualityMetrics.quality_distribution_metrics
 
+      File qc_quality_distribution_metrics         = AggregatedBamQC.agg_quality_distribution_metrics
+      File qc_alignment_summary_metrics            = AggregatedBamQC.agg_alignment_summary_metrics
+      File qc_error_summary_metrics                = AggregatedBamQC.agg_error_summary_metrics
+      File qc_read_group_gc_bias_summary_metrics   = AggregatedBamQC.read_group_gc_bias_summary_metrics
+      File qc_calculate_read_group_checksum_md5    = AggregatedBamQC.calculate_read_group_checksum_md5
+      File qc_gc_bias_detail_metrics               = AggregatedBamQC.agg_gc_bias_detail_metrics
+      File qc_read_group_alignment_summary_metrics = AggregatedBamQC.read_group_alignment_summary_metrics
+      File? qc_fingerprint_summary_metrics         = AggregatedBamQC.fingerprint_summary_metrics
+      File? qc_fingerprint_detail_metrics          = AggregatedBamQC.fingerprint_detail_metrics
+      File qc_gc_bias_summary_metrics              = AggregatedBamQC.agg_gc_bias_summary_metrics
+      File qc_quality_distribution_pdf             = AggregatedBamQC.agg_quality_distribution_pdf
+      File qc_bait_bias_summary_metrics            = AggregatedBamQC.agg_bait_bias_summary_metrics
+      File qc_bait_bias_detail_metrics             = AggregatedBamQC.agg_bait_bias_detail_metrics
+      File qc_gc_bias_pdf                          = AggregatedBamQC.agg_gc_bias_pdf
+      File qc_pre_adapter_summary_metrics          = AggregatedBamQC.agg_pre_adapter_summary_metrics
+      File qc_read_group_gc_bias_detail_metrics    = AggregatedBamQC.read_group_gc_bias_detail_metrics
+      File qc_pre_adapter_detail_metrics           = AggregatedBamQC.agg_pre_adapter_detail_metrics
+      File qc_insert_size_metrics                  = AggregatedBamQC.agg_insert_size_metrics
+      File qc_group_gc_bias_pdf                    = AggregatedBamQC.read_group_gc_bias_pdf
+      File qc_insert_size_histogram_pdf            = AggregatedBamQC.agg_insert_size_histogram_pdf
+
+      File? qc_wgs_metrics = CollectWgsMetrics.metrics
+      File? qc_raw_wgs_metrics = CollectRawWgsMetrics.metrics
+      File? qc_Hs_metrics = CollectHsMetrics.metrics
 
    }
+
 
 
 #   output {
