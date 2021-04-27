@@ -23,7 +23,7 @@ task CollectQualityYieldMetrics {
   runtime {
    # docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
-    memory: "3.5 GiB"
+    memory: 3000
   }
 
   output {
@@ -60,7 +60,7 @@ task CollectUnsortedReadgroupBamQualityMetrics {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: 7000
+    memory: 6000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -111,7 +111,7 @@ task CollectReadgroupBamQualityMetrics {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: 7000
+    memory: 6000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -165,7 +165,7 @@ task CollectAggregationMetrics {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: memory
+    memory: memory + 1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -214,7 +214,7 @@ task ConvertSequencingArtifactToOxoG {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: java_memory_size
+    memory: java_memory_size + 1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -386,7 +386,7 @@ task ValidateSamFile {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: java_memory_size
+    memory: java_memory_size+1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -467,7 +467,7 @@ task CollectRawWgsMetrics {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: java_memory_size
+    memory: java_memory_size+1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -505,7 +505,7 @@ task CollectRnaSeqMetrics {
   }
   runtime {
     #docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: 2000
+    memory: 3000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -554,7 +554,7 @@ task CollectHsMetrics {
 
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: java_memory_size
+    memory: java_memory_size+1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
 
@@ -582,7 +582,7 @@ task CalculateReadGroupChecksum {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: 1000
+    memory: 1500
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -621,7 +621,7 @@ task ValidateVCF {
   }
   runtime {
 #    docker: gatk_docker
-    memory: 6000
+    memory: 7000
 #    bootDiskSizeGb: 15
  #   disks: "local-disk " + disk_size + " HDD"
   }
@@ -655,7 +655,7 @@ task CollectVariantCallingMetrics {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: 2000
+    memory: 3000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
