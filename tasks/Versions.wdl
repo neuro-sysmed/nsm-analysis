@@ -65,8 +65,10 @@ task Image {
     }
 
     runtime {
-        backend: Local
+        backend: "nsm-local"
+        image: "/data/analysis/nsm-tools.sif"
     }
+
 
     output {
         String version = read_string(stdout())
@@ -86,7 +88,8 @@ task Singularity {
     }
 
     runtime {
-        backend: Local
+        backend: "nsm-local"
+        image: "/data/analysis/nsm-tools.sif"
     }
 
     output {
@@ -137,7 +140,7 @@ task Samtools {
 
 task Picard {
     input {
-        String picard_cmd = '/usr/local/bin/picard'
+        String picard_cmd = 'java -jar /usr/local/jars/picard.jar '
         String? image
     }
 

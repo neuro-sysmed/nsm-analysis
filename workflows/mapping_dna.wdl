@@ -63,7 +63,7 @@ workflow DNAPreprocessing {
       call QC.CollectUnsortedReadgroupBamQualityMetrics as CollectUnsortedReadgroupBamQualityMetrics {
          input:
             input_bam = BwaMem.aligned_bam,
-            output_bam_prefix = BwaMem.aligned_bam + "qc.readgroup_bam_quality_metrics",
+            output_bam_prefix = BwaMem.aligned_bam + ".qc.readgroup_bam_quality_metrics",
       }
      
    }

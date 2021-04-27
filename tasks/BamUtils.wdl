@@ -300,7 +300,7 @@ task BamAddProgramLine {
     echo  "" >> ~{bamfile}.header
 
     ~{samtools_cmd} reheader -P ~{bamfile}.header ~{bamfile} > ~{bamfile}.reheadered
-    cp ~{bamfile}.reheadered ~{bamfile}
+    mv -f ~{bamfile}.reheadered ~{bamfile}
 
   }
 

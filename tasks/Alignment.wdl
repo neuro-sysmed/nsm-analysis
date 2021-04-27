@@ -29,7 +29,7 @@ task BwaMem {
   Float disk_multiplier = 2.5
   Int disk_size = ceil(unmapped_bam_size + bwa_ref_size + (disk_multiplier * unmapped_bam_size) + 20)
 
-  String bwa_commandline = " mem -K 100000000 -p -v 3 -t 2 -Y $bash_ref_fasta"
+  String bwa_commandline = " mem -K 100000000 -p -v 3 -t 3 -Y $bash_ref_fasta"
 
   command <<<
 
@@ -101,7 +101,7 @@ task BwaMem {
   runtime {
 #    docker: "bruggerk/nsm-tools:latest"
 #    memory: "14 GiB"
-#    cpu: "4"
+    cpu: "4"
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
