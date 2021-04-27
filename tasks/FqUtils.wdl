@@ -35,8 +35,8 @@ task FqToBam {
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
-    cpu: "1"
-    memory: "5000 MiB"
+    cpus: 1
+    memory: 5000
   }
   output {
     File output_bam = "~{outdir}/~{output_bam_filename}"

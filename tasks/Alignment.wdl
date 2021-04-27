@@ -101,7 +101,7 @@ task BwaMem {
   runtime {
 #    docker: "bruggerk/nsm-tools:latest"
 #    memory: "14 GiB"
-    cpu: "4"
+    cpus: 4
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {

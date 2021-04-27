@@ -196,7 +196,7 @@ task ScatterIntervalList {
 
   command <<<
     set -e
-    mkdir out
+    mkdir -p out
     java -Xms1g -jar ~{picard_jar} \
       IntervalListTools \
       SCATTER_COUNT=~{scatter_count} \

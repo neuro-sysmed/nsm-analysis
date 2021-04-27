@@ -22,8 +22,7 @@ task MergeVCFs {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: "3 GiB"
-    disks: "local-disk ~{disk_size} HDD"
+    memory: 3000
   }
   output {
     File output_vcf = "~{output_vcf_name}"
@@ -59,9 +58,7 @@ task HardFilterVcf {
   }
   runtime {
 #    docker: gatk_docker
-    memory: "3 GiB"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
+    memory: 3000
   }
 }
 
@@ -107,10 +104,8 @@ task CNNScoreVariants {
 
   runtime {
 #    docker: gatk_docker
-    memory: "15 GiB"
-    cpu: "2"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
+    memory: 15000
+    cpus: 2
   }
 }
 
@@ -164,10 +159,7 @@ task FilterVariantTranches {
   }
 
   runtime {
-    memory: "7 GiB"
-    cpu: "2"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-#    docker: gatk_docker
+    memory: 7000
+    cpus: 2
   }
 }

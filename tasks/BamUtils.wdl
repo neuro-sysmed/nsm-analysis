@@ -43,7 +43,7 @@ task SortSam {
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
-    cpu: "1"
+    cpus: 1
     memory: 5000
   }
   output {
@@ -71,7 +71,7 @@ task Index {
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
-    cpu: "1"
+    cpus: 1
     memory: 5000
   }
   output {
@@ -117,7 +117,7 @@ task RevertSam {
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
-    cpu: "1"
+    cpus: 1
     memory: 5000
   }
   output {
@@ -610,7 +610,7 @@ task HaplotypeCaller {
   runtime {
 #    docker: gatk_docker
     memory: 6500
-    cpu: "2"
+    cpus: "2"
   }
 
   output {
@@ -694,7 +694,7 @@ task CheckContamination {
   >>>
   runtime {
     memory: 7500
-    cpu: 2
+    cpus: 2
   }
   output {
     File selfSM = "~{output_prefix}.selfSM"
