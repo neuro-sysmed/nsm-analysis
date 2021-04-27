@@ -44,7 +44,7 @@ task SortSam {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
     cpu: "1"
-    memory: "5000 MiB"
+    memory: 5000
   }
   output {
     File output_bam = "~{output_bam_basename}.bam"
@@ -72,7 +72,7 @@ task Index {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
     cpu: "1"
-    memory: "5000 MiB"
+    memory: 5000
   }
   output {
     File output_bam_index = "~{basename}.bai"
@@ -118,7 +118,7 @@ task RevertSam {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
 #    disks: "local-disk " + disk_size + " HDD"
     cpu: "1"
-    memory: "5000 MiB"
+    memory: 5000
   }
   output {
     File output_bam = "~{outdir}/~{output_bam_filename}"
@@ -176,7 +176,7 @@ task MarkDuplicates {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-#    memory: "~{memory_size} GiB"
+    memory: java_memory_size + 1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -233,7 +233,7 @@ task MergeAndMarkDuplicates {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-#    memory: "~{memory_size} GiB"
+    memory: java_memory_size+1000
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -353,9 +353,7 @@ task BaseRecalibrator {
   }
   runtime {
     #docker: gatk_docker
-    memory: "2 GiB"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
+    memory: 6000
   }
   output {
     File recalibration_report = "~{recalibration_report_filename}"
@@ -417,9 +415,7 @@ task ApplyBQSR {
   }
   runtime {
     #docker: gatk_docker
-    memory: "~{memory_size} MiB"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
+    memory: 4000
   }
   output {
     File recalibrated_bam = "~{output_bam_basename}.bam"
@@ -444,9 +440,7 @@ task GatherBqsrReports {
     }
   runtime {
     #docker: gatk_docker
-    memory: "3500 MiB"
-    bootDiskSizeGb: 15
-    disks: "local-disk 20 HDD"
+    memory: 3500
   }
   output {
     File output_bqsr_report = "~{output_report_filename}"
@@ -476,8 +470,7 @@ task GatherSortedBamFiles {
     }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: "3 GiB"
-    disks: "local-disk " + disk_size + " HDD"
+    memory: 3000
   }
   output {
     File output_bam = "~{output_bam_basename}.bam"
@@ -510,8 +503,7 @@ task GatherUnsortedBamFiles {
     }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
-    memory: "3 GiB"
-    disks: "local-disk " + disk_size + " HDD"
+    memory: 3000
   }
   output {
     File output_bam = "~{output_bam_basename}.bam"
@@ -557,9 +549,7 @@ task GenerateSubsettedContaminationResources {
 
   >>>
   runtime {
-    memory: "3.5 GiB"
-    disks: "local-disk 10 HDD"
-#    docker: "us.gcr.io/broad-gotc-prod/bedtools:2.27.1"
+    memory: 3500
   }
   output {
     File subsetted_contamination_ud = output_ud
@@ -601,7 +591,7 @@ task HaplotypeCaller {
 
   command <<<
     set -e
-    ~{gatk_cmd} --java-options "-Xms1000m " \
+    ~{gatk_cmd} --java-options "-Xms5500m " \
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
@@ -619,10 +609,8 @@ task HaplotypeCaller {
 
   runtime {
 #    docker: gatk_docker
-    memory: "6.5 GiB"
+    memory: 6500
     cpu: "2"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
   }
 
   output {
@@ -705,9 +693,7 @@ task CheckContamination {
     CODE
   >>>
   runtime {
-    memory: "7.5 GiB"
-    disks: "local-disk " + disk_size + " HDD"
-#    docker: "us.gcr.io/broad-gotc-prod/verify-bam-id:c1cba76e979904eb69c31520a0d7f5be63c72253-1553018888"
+    memory: 7500
     cpu: 2
   }
   output {

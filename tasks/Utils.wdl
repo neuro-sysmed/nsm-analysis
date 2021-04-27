@@ -173,7 +173,7 @@ task CreateSequenceGroupingTSV {
   >>>
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/python:2.7"
-    memory: "2 GiB"
+    memory: 2000
   }
   output {
     Array[Array[String]] sequence_grouping = read_tsv("sequence_grouping.txt")
@@ -224,6 +224,6 @@ task ScatterIntervalList {
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.4.7-1603303710"
-    memory: "2 GiB"
+    memory: 2000
   }
 }
