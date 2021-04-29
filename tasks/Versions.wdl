@@ -6,6 +6,7 @@ workflow Versions {
     call Picard as Picard
     call Gatk as Gatk
     call Bcftools as Bcftools
+    call Bedtools as Bedtools
     call Star as Star
     call Package as Package
     call Singularity as Singularity
@@ -18,6 +19,7 @@ workflow Versions {
         String picard   = Picard.version
         String gatk     = Gatk.version
         String bcftools = Bcftools.version
+        String bedtools = Bedtools.version
         String star     = Star.version        
         String singularity = Singularity.version
         String image    = Image.version
@@ -216,4 +218,24 @@ task Bcftools {
     }
 }
 
+
+task Bedtools {
+    input {
+        String bedtools_cmd = '/usr/local/bin/bedtools'
+        String? image
+    }
+
+#    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
+
+    command {
+        bedtools_version=$(~{bedtools_cmd} --version  | \
+             perl -pe 's/^bedtools //')
+
+        echo $bedtools_version
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
 
