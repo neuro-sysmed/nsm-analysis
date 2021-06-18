@@ -25,7 +25,7 @@ workflow DNAPreprocessing {
       Boolean doBSQR = false
       Boolean somatic = false
       Boolean bin_base_qualities = true
-      Int compression_level = 3
+      Int compression_level = 5
    }
 
 

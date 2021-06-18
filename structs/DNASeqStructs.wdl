@@ -2,10 +2,9 @@ version 1.0
 
 struct SampleAndUnmappedBams {
   String base_filename
-  String? final_gvcf_base_name
   Array[File] unmapped_bams
   String sample_name
-  String unmapped_bam_suffix
+  String unmapped_bam_suffix = '.ubam'
 }
 
 struct ReferenceFasta {
