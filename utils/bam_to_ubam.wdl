@@ -7,15 +7,10 @@ workflow BamToUnalignedBam {
 
    input {
       Array[String] bams
-#      String? input_dir 
-      String unmapped_bam_suffix
-      String mapped_bam_suffix
+      String unmapped_bam_suffix = ".ubam"
+      String mapped_bam_suffix = ".bam"
+      String outdir = "."
    }
-
-#   if (defined(input_dir)) {
-#      Array[String] bams = glob("~{input_dir}/*.{mapped_bam_suffix}")
-#   }
-
 
    scatter (input_bam in bams) {
 
@@ -25,7 +20,7 @@ workflow BamToUnalignedBam {
          input:
             input_bam = input_bam,
             output_bam_filename = bam_basename + unmapped_bam_suffix,
-            outdir = "ubams"
+            outdir = outdir
       }
    }
 

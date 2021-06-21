@@ -3,7 +3,7 @@
     "../test_data/NA12878.hg38_22.bam"
   ],
   "BamToUnalignedBam.unmapped_bam_suffix": ".ubam",
-  "BamToUnalignedBam.mapped_bam_suffix": ".hg38_22.bam"
-
+  "BamToUnalignedBam.mapped_bam_suffix": ".hg38_22.bam",
+  "BamToUnalignedBam.outdir": "ubams"
 }
   

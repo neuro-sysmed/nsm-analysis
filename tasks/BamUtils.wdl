@@ -570,8 +570,7 @@ task HaplotypeCaller {
     File ref_fasta_index
     Float? contamination
     Boolean make_gvcf
-    Int? hc_scatter = 199
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
+    Int hc_scatter = 199
     String gatk_cmd = "/usr/local/bin/gatk"
   }
 
@@ -579,7 +578,6 @@ task HaplotypeCaller {
   String output_file_name = vcf_basename + output_suffix
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
-  Int disk_size = ceil(((size(input_bam, "GiB") + 30) / hc_scatter) + ref_size) + 20
 
 #  String bamout_arg = if make_bamout then "-bamout ~{vcf_basename}.bamout.bam" else ""
 
