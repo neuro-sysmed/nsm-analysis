@@ -4,7 +4,7 @@ struct SampleAndUnmappedBams {
   String base_filename
   Array[File] unmapped_bams
   String sample_name
-  String unmapped_bam_suffix = '.ubam'
+  String unmapped_bam_suffix
 }
 
 struct ReferenceFasta {
