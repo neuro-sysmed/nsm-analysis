@@ -10,6 +10,7 @@ workflow Versions {
     call Star as Star
     call Package as Package
     call Singularity as Singularity
+    call Salmon as Salmon
     call Image as Image
 
     output {
@@ -23,13 +24,14 @@ workflow Versions {
         String star     = Star.version        
         String singularity = Singularity.version
         String image    = Image.version
+        String salmon   = Salmon.version
     }
 }
 
 
 task Package {
     input {
-      String version_file = "../../version.json"
+      String version_file = "../version.json"
     }
   # returns null for unset keys
     Map[String, String?] version_map = read_json(version_file)
@@ -67,7 +69,7 @@ task Image {
     }
 
     runtime {
-        backend: "nsm-local"
+#        backend: "nsm-local"
         image: "/data/analysis/nsm-tools.sif"
     }
 
@@ -90,7 +92,7 @@ task Singularity {
     }
 
     runtime {
-        backend: "nsm-local"
+#        backend: "nsm-local"
         image: "/data/analysis/nsm-tools.sif"
     }
 
@@ -98,6 +100,29 @@ task Singularity {
         String version = read_string(stdout())
     }
 }
+
+
+task Salmon {
+    input {
+      String salmon_cmd = "/usr/local/bin/salmon"
+    }
+
+    command {
+        singularity_version=$(~{salmon_cmd} --version 2>&1 | \
+            perl -pe 's/^salmon //')
+
+        echo $singularity_version
+    }
+
+    runtime {
+#        backend: "nsm-local"
+    }
+
+    output {
+        String version = read_string(stdout())
+    }
+}
+
 
 
 task Bwa {
