@@ -1,9 +1,9 @@
 {
   "MakeUnalignedBam.bams": [
-    "../test_data/NA12878.ubam"
+    "../../test_data/NA12878.ubam"
   ],
-  "MakeUnalignedBam.sample_fqs": [{"fwd": "../test_data/NA12878_r1.fastq.gz",
-                      "rev":"../test_data/NA12878_r1.fastq.gz" ,
+  "MakeUnalignedBam.sample_fqs": [{"fwd": "../../test_data/exome_1.fq.gz",
+                      "rev":"../../test_data/exome_2.fq.gz" ,
                       "sample_name": "NA12878",
                       "readgroup": "HJYFJCCXX160204_4"}
   ],

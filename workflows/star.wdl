@@ -19,7 +19,7 @@ workflow RNAPreprocessing {
       File rev_reads
       File gtf
       String genome_dir
-      Int preemptible_tries = 3
+
    }
 
 
@@ -55,7 +55,7 @@ workflow RNAPreprocessing {
       input:
          input_bam = bamfile,
 #         output_bam_prefix = "~{base_file_name}.readgroup",
-         preemptible_tries = preemptible_tries
+
    }
 
 

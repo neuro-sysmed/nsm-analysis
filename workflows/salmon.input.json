@@ -1,0 +1,8 @@
+{
+  "Salmon.sample_name": "NA12878",
+  "Salmon.fwd_reads": "rnaseq_1.fq.gz",
+  "Salmon.rev_reads": "rnaseq_2.fq.gz",
+  "Salmon.reference_dir": " ~/projects/nsm/gencodev38/",
+  "Salmon.threads": 6
+  
+}

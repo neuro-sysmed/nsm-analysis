@@ -139,6 +139,41 @@ task Star {
   output {
     File bam_file = "~{base_file_name}.bam"
   }
+}
+
+task Salmon {
+  input {
+      String sample_name
+      File fwd_reads
+      File? rev_reads
+      String reference_dir
+      Int threads = 4
+  }
+
+  command {
+
+    if [  -z "~{rev_reads}" ]; then
+        salmon quant -i ~{reference_dir} -l A -1 ~{fwd_reads} \
+         -p ~{threads} --validateMappings -o ~{sample_name}
+    else
+        salmon quant -i ~{reference_dir} -l A -1 ~{fwd_reads} -2 ~{rev_reads} \
+         -p ~{threads} --validateMappings -o ~{sample_name}
+    fi
 
 
+  }
+
+  output {
+    File flenDist = "~{sample_name}/libParams/flenDist.txt"
+    File quant = "~{sample_name}/quant.sf"
+    File cmdInfo = "~{sample_name}/cmd_info.json"
+    File libFormatCounts = "~{sample_name}/lib_format_counts.json"
+    File log = "~{sample_name}/logs/salmon_quant.log"
+    File ambigInfo = "~{sample_name}/aux_info/ambig_info.tsv"
+    File fld= "~{sample_name}/aux_info/fld.gz"
+    File obsBias = "~{sample_name}/aux_info/observed_bias.gz"
+    File expBias = "~{sample_name}/aux_info/expected_bias.gz"
+    File obsBias3p = "~{sample_name}/aux_info/observed_bias_3p.gz"
+    File metaInfo = "~{sample_name}/aux_info/meta_info.json"
+  }
 }

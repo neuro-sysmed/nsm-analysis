@@ -15,13 +15,13 @@ jars_location = ["/home/brugger/software/jars/",
 
 
 
-def find_jar(jar_regex:str=JAR, jars_locations:list=jar_locations) -> str:
-    for jar_location in jar_locations:
+def find_jar(jar_regex:str=CROMWELL_JAR, jars_locations:list=jars_location) -> str:
+    for jar_location in jars_location:
         jars = glob.glob(jar_location +jar_regex.format("*"))
         if jars != []:
             jars = sorted(jars)
-            global JAR
-            JAR = jars[-1]
+            global CROMWELL_JAR
+            CROMWELL_JAR = jars[-1]
             return
 #    jar_regex = 
     print(f"Could not find {jar_regex.format('*')}")
@@ -41,6 +41,8 @@ def main():
     args.java_options = " ".join(args.java_options)
     args.command = " ".join(args.command)
 
+    find_jar()
+    
     run(shlex.split(f"java {args.java_options} -jar {CROMWELL_JAR} {args.command} {' '.join(other_args)}"))
 
 
