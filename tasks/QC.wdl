@@ -6,16 +6,15 @@ task CollectQualityYieldMetrics {
   input {
     File input_bam
     String metrics_filename
-    String? picard_jar = "/usr/local/jars/picard.jar"
-
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Int disk_size = ceil(size(input_bam, "GiB")) + 20
 
   command {
+    mkdir qc
     java -Xms2000m -jar ~{picard_jar} \
       CollectQualityYieldMetrics \
-      INPUT=~{input_bam} \
+      INPUT=qc/~{input_bam} \
       OQ=true \
       OUTPUT=~{metrics_filename}
   }
@@ -27,7 +26,7 @@ task CollectQualityYieldMetrics {
   }
 
   output {
-    File quality_yield_metrics = "~{metrics_filename}"
+    File quality_yield_metrics = "qc/~{metrics_filename}"
   }
 }
 
@@ -36,16 +35,16 @@ task CollectUnsortedReadgroupBamQualityMetrics {
   input {
     File input_bam
     String output_bam_prefix
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Int disk_size = ceil(size(input_bam, "GiB")) + 20
 
   command {
+    mkdir qc
     java -Xms5000m -jar ~{picard_jar} \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
-      OUTPUT=~{output_bam_prefix} \
+      OUTPUT=qc/~{output_bam_prefix} \
       ASSUME_SORTED=true \
       PROGRAM=null \
       PROGRAM=CollectBaseDistributionByCycle \
@@ -64,14 +63,14 @@ task CollectUnsortedReadgroupBamQualityMetrics {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File base_distribution_by_cycle_pdf = "~{output_bam_prefix}.base_distribution_by_cycle.pdf"
-    File base_distribution_by_cycle_metrics = "~{output_bam_prefix}.base_distribution_by_cycle_metrics"
-    File insert_size_histogram_pdf = "~{output_bam_prefix}.insert_size_histogram.pdf"
-    File insert_size_metrics = "~{output_bam_prefix}.insert_size_metrics"
-    File quality_by_cycle_pdf = "~{output_bam_prefix}.quality_by_cycle.pdf"
-    File quality_by_cycle_metrics = "~{output_bam_prefix}.quality_by_cycle_metrics"
-    File quality_distribution_pdf = "~{output_bam_prefix}.quality_distribution.pdf"
-    File quality_distribution_metrics = "~{output_bam_prefix}.quality_distribution_metrics"
+    File base_distribution_by_cycle_pdf = "qc/~{output_bam_prefix}.base_distribution_by_cycle.pdf"
+    File base_distribution_by_cycle_metrics = "qc/~{output_bam_prefix}.base_distribution_by_cycle_metrics"
+    File insert_size_histogram_pdf = "qc/~{output_bam_prefix}.insert_size_histogram.pdf"
+    File insert_size_metrics = "qc/~{output_bam_prefix}.insert_size_metrics"
+    File quality_by_cycle_pdf = "qc/~{output_bam_prefix}.quality_by_cycle.pdf"
+    File quality_by_cycle_metrics = "qc/~{output_bam_prefix}.quality_by_cycle_metrics"
+    File quality_distribution_pdf = "qc/~{output_bam_prefix}.quality_distribution.pdf"
+    File quality_distribution_metrics = "qc/~{output_bam_prefix}.quality_distribution_metrics"
   }
 }
 
@@ -92,16 +91,17 @@ task CollectReadgroupBamQualityMetrics {
   Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
 
   command {
+    mkdir qc
     # These are optionally generated, but need to exist for Cromwell's sake
-    touch ~{output_bam_prefix}.gc_bias.detail_metrics \
-      ~{output_bam_prefix}.gc_bias.pdf \
-      ~{output_bam_prefix}.gc_bias.summary_metrics
+    touch qc/~{output_bam_prefix}.gc_bias.detail_metrics \
+      qc/~{output_bam_prefix}.gc_bias.pdf \
+      qc/~{output_bam_prefix}.gc_bias.summary_metrics
 
     java -Xms5000m -jar ~{picard_jar} \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
-      OUTPUT=~{output_bam_prefix} \
+      OUTPUT=qc/~{output_bam_prefix} \
       ASSUME_SORTED=true \
       PROGRAM=null \
       PROGRAM=CollectAlignmentSummaryMetrics \
@@ -115,10 +115,10 @@ task CollectReadgroupBamQualityMetrics {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File alignment_summary_metrics = "~{output_bam_prefix}.alignment_summary_metrics"
-    File gc_bias_detail_metrics = "~{output_bam_prefix}.gc_bias.detail_metrics"
-    File gc_bias_pdf = "~{output_bam_prefix}.gc_bias.pdf"
-    File gc_bias_summary_metrics = "~{output_bam_prefix}.gc_bias.summary_metrics"
+    File alignment_summary_metrics = "qc/~{output_bam_prefix}.alignment_summary_metrics"
+    File gc_bias_detail_metrics = "qc/~{output_bam_prefix}.gc_bias.detail_metrics"
+    File gc_bias_pdf = "qc/~{output_bam_prefix}.gc_bias.pdf"
+    File gc_bias_summary_metrics = "qc/~{output_bam_prefix}.gc_bias.summary_metrics"
   }
 }
 
@@ -140,18 +140,19 @@ task CollectAggregationMetrics {
   Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
 
   command {
+    mkdir qc
     # These are optionally generated, but need to exist for Cromwell's sake
-    touch ~{output_bam_prefix}.gc_bias.detail_metrics \
-      ~{output_bam_prefix}.gc_bias.pdf \
-      ~{output_bam_prefix}.gc_bias.summary_metrics \
-      ~{output_bam_prefix}.insert_size_metrics \
-      ~{output_bam_prefix}.insert_size_histogram.pdf
+    touch qc/~{output_bam_prefix}.gc_bias.detail_metrics \
+      qc/~{output_bam_prefix}.gc_bias.pdf \
+      qc/~{output_bam_prefix}.gc_bias.summary_metrics \
+      qc/~{output_bam_prefix}.insert_size_metrics \
+      qc/~{output_bam_prefix}.insert_size_histogram.pdf
 
     java -Xms~{memory}m -jar ~{picard_jar} \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
-      OUTPUT=~{output_bam_prefix} \
+      OUTPUT=qc/~{output_bam_prefix} \
       ASSUME_SORTED=true \
       PROGRAM=null \
       PROGRAM=CollectAlignmentSummaryMetrics \
@@ -169,19 +170,19 @@ task CollectAggregationMetrics {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File alignment_summary_metrics = "~{output_bam_prefix}.alignment_summary_metrics"
-    File bait_bias_detail_metrics = "~{output_bam_prefix}.bait_bias_detail_metrics"
-    File bait_bias_summary_metrics = "~{output_bam_prefix}.bait_bias_summary_metrics"
-    File gc_bias_detail_metrics = "~{output_bam_prefix}.gc_bias.detail_metrics"
-    File gc_bias_pdf = "~{output_bam_prefix}.gc_bias.pdf"
-    File gc_bias_summary_metrics = "~{output_bam_prefix}.gc_bias.summary_metrics"
-    File insert_size_histogram_pdf = "~{output_bam_prefix}.insert_size_histogram.pdf"
-    File insert_size_metrics = "~{output_bam_prefix}.insert_size_metrics"
-    File pre_adapter_detail_metrics = "~{output_bam_prefix}.pre_adapter_detail_metrics"
-    File pre_adapter_summary_metrics = "~{output_bam_prefix}.pre_adapter_summary_metrics"
-    File quality_distribution_pdf = "~{output_bam_prefix}.quality_distribution.pdf"
-    File quality_distribution_metrics = "~{output_bam_prefix}.quality_distribution_metrics"
-    File error_summary_metrics = "~{output_bam_prefix}.error_summary_metrics"
+    File alignment_summary_metrics = "qc/~{output_bam_prefix}.alignment_summary_metrics"
+    File bait_bias_detail_metrics = "qc/~{output_bam_prefix}.bait_bias_detail_metrics"
+    File bait_bias_summary_metrics = "qc/~{output_bam_prefix}.bait_bias_summary_metrics"
+    File gc_bias_detail_metrics = "qc/~{output_bam_prefix}.gc_bias.detail_metrics"
+    File gc_bias_pdf = "qc/~{output_bam_prefix}.gc_bias.pdf"
+    File gc_bias_summary_metrics = "qc/~{output_bam_prefix}.gc_bias.summary_metrics"
+    File insert_size_histogram_pdf = "qc/~{output_bam_prefix}.insert_size_histogram.pdf"
+    File insert_size_metrics = "qc/~{output_bam_prefix}.insert_size_metrics"
+    File pre_adapter_detail_metrics = "qc/~{output_bam_prefix}.pre_adapter_detail_metrics"
+    File pre_adapter_summary_metrics = "qc/~{output_bam_prefix}.pre_adapter_summary_metrics"
+    File quality_distribution_pdf = "qc/~{output_bam_prefix}.quality_distribution.pdf"
+    File quality_distribution_metrics = "qc/~{output_bam_prefix}.quality_distribution_metrics"
+    File error_summary_metrics = "qc/~{output_bam_prefix}.error_summary_metrics"
   }
 }
 
@@ -205,11 +206,11 @@ task ConvertSequencingArtifactToOxoG {
 
   command {
     input_base=$(dirname ~{pre_adapter_detail_metrics})/~{base_name}
-
+    mkdir qc
     java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       ConvertSequencingArtifactToOxoG \
       --INPUT_BASE $input_base \
-      --OUTPUT_BASE ~{base_name} \
+      --OUTPUT_BASE qc/~{base_name} \
       --REFERENCE_SEQUENCE ~{ref_fasta}
   }
   runtime {
@@ -218,7 +219,7 @@ task ConvertSequencingArtifactToOxoG {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File oxog_metrics = "~{base_name}.oxog_metrics"
+    File oxog_metrics = "qc/~{base_name}.oxog_metrics"
   }
 }
 
@@ -238,11 +239,12 @@ task CrossCheckFingerprints {
   Int disk_size = ceil(total_input_size) + 20
 
   command <<<
+    mkdir qc
     java -Dsamjdk.buffer_size=131072 \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3000m \
       -jar ~{picard_jar} \
       CrosscheckFingerprints \
-      OUTPUT=~{metrics_filename} \
+      OUTPUT=qc/~{metrics_filename} \
       HAPLOTYPE_MAP=~{haplotype_database_file} \
       EXPECT_ALL_GROUPS_TO_MATCH=true \
       INPUT=~{sep=' INPUT=' input_bams} \
@@ -255,7 +257,7 @@ task CrossCheckFingerprints {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File cross_check_fingerprints_metrics = "~{metrics_filename}"
+    File cross_check_fingerprints_metrics = "qc/~{metrics_filename}"
   }
 }
 
@@ -275,17 +277,18 @@ task CheckFingerprint {
   Int disk_size = ceil(size(input_bam, "GiB")) + 20
   # Picard has different behavior depending on whether or not the OUTPUT parameter ends with a '.', so we are explicitly
   #   passing in where we want the two metrics files to go to avoid any potential confusion.
-  String summary_metrics_location = "~{output_basename}.fingerprinting_summary_metrics"
-  String detail_metrics_location = "~{output_basename}.fingerprinting_detail_metrics"
+  String summary_metrics_location = "qc/~{output_basename}.fingerprinting_summary_metrics"
+  String detail_metrics_location = "qc/~{output_basename}.fingerprinting_detail_metrics"
 
   command <<<
+    mkdir qc
     java -Dsamjdk.buffer_size=131072 \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3g  \
       -jar ~{picard_jar} \
       CheckFingerprint \
       INPUT=~{input_bam} \
-      SUMMARY_OUTPUT=~{summary_metrics_location} \
-      DETAIL_OUTPUT=~{detail_metrics_location} \
+      SUMMARY_OUTPUT=qc/~{summary_metrics_location} \
+      DETAIL_OUTPUT=qc/~{detail_metrics_location} \
       GENOTYPES=~{genotypes} \
       HAPLOTYPE_MAP=~{haplotype_database_file} \
       SAMPLE_ALIAS="~{sample}" \
@@ -362,21 +365,18 @@ task ValidateSamFile {
     Array[String]? ignore
     Boolean? is_outlier_data
     Int memory_multiplier = 1
-    Int additional_disk = 20
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
-
-  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
-  Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + additional_disk
 
   Int memory_size = ceil(7 * memory_multiplier)
   Int java_memory_size = (memory_size - 1) * 1000
 
   command {
+    mkdir qc
     java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       ValidateSamFile \
       INPUT=~{input_bam} \
-      OUTPUT=~{report_filename} \
+      OUTPUT=qc/~{report_filename} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
       ~{"MAX_OUTPUT=" + max_output} \
       IGNORE=~{default="null" sep=" IGNORE=" ignore} \
@@ -390,7 +390,7 @@ task ValidateSamFile {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File report = "~{report_filename}"
+    File report = "qc/~{report_filename}"
   }
 }
 
@@ -404,13 +404,11 @@ task CollectWgsMetrics {
     File ref_fasta
     File ref_fasta_index
     Int read_length
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
-  Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
-
   command {
+    mkdir qc
     java -Xms2000m -jar ~{picard_jar} \
       CollectWgsMetrics \
       INPUT=~{input_bam} \
@@ -418,7 +416,7 @@ task CollectWgsMetrics {
       REFERENCE_SEQUENCE=~{ref_fasta} \
       INCLUDE_BQ_HISTOGRAM=true \
       INTERVALS=~{wgs_coverage_interval_list} \
-      OUTPUT=~{metrics_filename} \
+      OUTPUT=qc/~{metrics_filename} \
       USE_FAST_ALGORITHM=true \
       READ_LENGTH=~{read_length}
   }
@@ -428,7 +426,7 @@ task CollectWgsMetrics {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File metrics = "~{metrics_filename}"
+    File metrics = "qc/~{metrics_filename}"
   }
 }
 
@@ -444,7 +442,7 @@ task CollectRawWgsMetrics {
     Int read_length
     Int memory_multiplier = 1
     Int additional_disk = 20
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
@@ -454,6 +452,7 @@ task CollectRawWgsMetrics {
   String java_memory_size = (memory_size - 1) * 1000
 
   command {
+    mkdir qc
     java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       CollectRawWgsMetrics \
       INPUT=~{input_bam} \
@@ -461,7 +460,7 @@ task CollectRawWgsMetrics {
       REFERENCE_SEQUENCE=~{ref_fasta} \
       INCLUDE_BQ_HISTOGRAM=true \
       INTERVALS=~{wgs_coverage_interval_list} \
-      OUTPUT=~{metrics_filename} \
+      OUTPUT=qc/~{metrics_filename} \
       USE_FAST_ALGORITHM=true \
       READ_LENGTH=~{read_length}
   }
@@ -471,7 +470,7 @@ task CollectRawWgsMetrics {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File metrics = "~{metrics_filename}"
+    File metrics = "qc/~{metrics_filename}"
   }
 }
 
@@ -485,13 +484,12 @@ task CollectRnaSeqMetrics {
     File ref_fasta
     File ref_fasta_index
     Int read_length
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
-  Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
 
   command {
+    mkdir qc
     java -Xms2000m -jar ~{picard_jar} \
       CollectRnaSeqMetrics \
       INPUT=~{input_bam} \
@@ -499,7 +497,7 @@ task CollectRnaSeqMetrics {
       REFERENCE_SEQUENCE=~{ref_fasta} \
       INCLUDE_BQ_HISTOGRAM=true \
       INTERVALS=~{wgs_coverage_interval_list} \
-      OUTPUT=~{metrics_filename} \
+      OUTPUT=qc/~{metrics_filename} \
       USE_FAST_ALGORITHM=true \
       READ_LENGTH=~{read_length}
   }
@@ -509,7 +507,7 @@ task CollectRnaSeqMetrics {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File metrics = "~{metrics_filename}"
+    File metrics = "qc/~{metrics_filename}"
   }
 }
 
@@ -525,12 +523,9 @@ task CollectHsMetrics {
     File target_interval_list
     File bait_interval_list
     Int memory_multiplier = 1
-    Int additional_disk = 20
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
-  Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + additional_disk
   # Try to fit the input bam into memory, within reason.
   Int rounded_bam_size = ceil(size(input_bam, "GiB") + 0.5)
   Int rounded_memory_size = ceil((if (rounded_bam_size > 10) then 10 else rounded_bam_size) * memory_multiplier)
@@ -539,6 +534,7 @@ task CollectHsMetrics {
 
   # There are probably more metrics we want to generate with this tool
   command {
+    mkdir qc
     java -Xms~{java_memory_size}m -jar ~{picard_jar} \
       CollectHsMetrics \
       INPUT=~{input_bam} \
@@ -549,7 +545,7 @@ task CollectHsMetrics {
       METRIC_ACCUMULATION_LEVEL=null \
       METRIC_ACCUMULATION_LEVEL=SAMPLE \
       METRIC_ACCUMULATION_LEVEL=LIBRARY \
-      OUTPUT=~{metrics_filename}
+      OUTPUT=qc/~{metrics_filename}
   }
 
   runtime {
@@ -559,7 +555,7 @@ task CollectHsMetrics {
   }
 
   output {
-    File metrics = metrics_filename
+    File metrics = "qc/~{metrics_filename}"
   }
 }
 
@@ -569,16 +565,16 @@ task CalculateReadGroupChecksum {
     File input_bam
     File input_bam_index
     String read_group_md5_filename
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Int disk_size = ceil(size(input_bam, "GiB")) + 20
 
   command {
+    mkdir qc
     java -Xms1000m -jar ~{picard_jar} \
       CalculateReadGroupChecksum \
       INPUT=~{input_bam} \
-      OUTPUT=~{read_group_md5_filename}
+      OUTPUT=qc/~{read_group_md5_filename}
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
@@ -586,7 +582,7 @@ task CalculateReadGroupChecksum {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File md5_file = "~{read_group_md5_filename}"
+    File md5_file = "qc/~{read_group_md5_filename}"
   }
 }
 
@@ -602,12 +598,9 @@ task ValidateVCF {
     File dbsnp_vcf_index
     File calling_interval_list
     Boolean is_gvcf = true
-#    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
-    String? gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "/usr/local/bin/gatk"
   }
 
-#  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
- # Int disk_size = ceil(size(input_vcf, "GiB") + size(dbsnp_vcf, "GiB") + ref_size) + 20
 
   command {
     ~{gatk_cmd} --java-options -Xms6000m \
@@ -620,10 +613,7 @@ task ValidateVCF {
       --dbsnp ~{dbsnp_vcf}
   }
   runtime {
-#    docker: gatk_docker
     memory: 7000
-#    bootDiskSizeGb: 15
- #   disks: "local-disk " + disk_size + " HDD"
   }
 }
 
@@ -638,29 +628,27 @@ task CollectVariantCallingMetrics {
     File ref_dict
     File evaluation_interval_list
     Boolean is_gvcf = true
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Int disk_size = ceil(size(input_vcf, "GiB") + size(dbsnp_vcf, "GiB")) + 20
 
   command {
+    mkdir qc
     java -Xms2000m -jar ~{picard_jar} \
       CollectVariantCallingMetrics \
       INPUT=~{input_vcf} \
-      OUTPUT=~{metrics_basename} \
+      OUTPUT=qc/~{metrics_basename} \
       DBSNP=~{dbsnp_vcf} \
       SEQUENCE_DICTIONARY=~{ref_dict} \
       TARGET_INTERVALS=~{evaluation_interval_list} \
       ~{true="GVCF_INPUT=true" false="" is_gvcf}
   }
   runtime {
-#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
     memory: 3000
-#    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File summary_metrics = "~{metrics_basename}.variant_calling_summary_metrics"
-    File detail_metrics = "~{metrics_basename}.variant_calling_detail_metrics"
+    File summary_metrics = "qc/~{metrics_basename}.variant_calling_summary_metrics"
+    File detail_metrics = "qc/~{metrics_basename}.variant_calling_detail_metrics"
   }
 }
 
