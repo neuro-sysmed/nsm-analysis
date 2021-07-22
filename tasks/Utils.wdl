@@ -99,7 +99,8 @@ task WriteStringsToFile {
   }
 
   command {
-    echo "~{sep="\n" strings}" > "~{outfile}"
+    cp ${write_lines( strings )} ~{outfile}
+
   }
 
   output {
