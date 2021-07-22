@@ -11,8 +11,8 @@ task BwaMem {
 # Read unmapped BAM, convert on-the-fly to FASTQ and stream to BWA MEM for alignment, then stream to MergeBamAlignment
   input {
     File input_bam
-    String? bwa_cmd = "/usr/local/bin/bwa"
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String bwa_cmd = "/usr/local/bin/bwa"
+    String picard_jar = "/usr/local/jars/picard.jar"
     String bam_basename
 
     ReferenceFasta reference_fasta
@@ -21,19 +21,19 @@ task BwaMem {
     Boolean hard_clip_reads = false
   }
 
-  Float unmapped_bam_size = size(input_bam, "GiB")
-  Float ref_size = size(reference_fasta.ref_fasta, "GiB") + size(reference_fasta.ref_fasta_index, "GiB") + size(reference_fasta.ref_dict, "GiB")
-  Float bwa_ref_size = ref_size + size(reference_fasta.ref_amb, "GiB") + size(reference_fasta.ref_ann, "GiB") + size(reference_fasta.ref_bwt, "GiB") + size(reference_fasta.ref_pac, "GiB") + size(reference_fasta.ref_sa, "GiB")
+#  Float unmapped_bam_size = size(input_bam, "GiB")
+#  Float ref_size = size(reference_fasta.ref_fasta, "GiB") + size(reference_fasta.ref_fasta_index, "GiB") + size(reference_fasta.ref_dict, "GiB")
+#  Float bwa_ref_size = ref_size + size(reference_fasta.ref_amb, "GiB") + size(reference_fasta.ref_ann, "GiB") + size(reference_fasta.ref_bwt, "GiB") + size(reference_fasta.ref_pac, "GiB") + size(reference_fasta.ref_sa, "GiB")
   # Sometimes the output is larger than the input, or a task can spill to disk.
   # In these cases we need to account for the input (1) and the output (1.5) or the input(1), the output(1), and spillage (.5).
-  Float disk_multiplier = 2.5
-  Int disk_size = ceil(unmapped_bam_size + bwa_ref_size + (disk_multiplier * unmapped_bam_size) + 20)
+#  Float disk_multiplier = 2.5
+#  Int disk_size = ceil(unmapped_bam_size + bwa_ref_size + (disk_multiplier * unmapped_bam_size) + 20)
 
   String bwa_commandline = " mem -K 100000000 -p -v 3 -t 3 -Y $bash_ref_fasta"
 
   command <<<
 
-    bash_ref_fasta=~{reference_fasta.ref_fasta}
+
 
     # This is done before "set -o pipefail" because "bwa" will have a rc=1 and we don't want to allow rc=1 to succeed
     # because the sed may also fail with that error and that is something we actually want to fail on.
@@ -44,7 +44,7 @@ task BwaMem {
     set -o pipefail
     set -e
 
-    if [ -z ${BWA_VERSION} ]; then
+    if [[ -z ${BWA_VERSION} ]]; then
         exit 1;
     fi
 
@@ -117,8 +117,8 @@ task Star {
       File rev_reads
       File gtf
       String genome_dir
-      String? star_cmd = "/usr/local/bin/STAR"
-      Int? threads = 4
+      String star_cmd = "/usr/local/bin/STAR"
+      Int threads = 4
   }
 
   command {
