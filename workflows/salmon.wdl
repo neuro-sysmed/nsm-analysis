@@ -1,7 +1,8 @@
 version 1.0
 
-#import "../tasks/Versions.wdl" as Versions
+import "../tasks/Versions.wdl" as Versions
 import "../tasks/Alignment.wdl" as Alignment
+import "../tasks/Utils.wdl" as Utils
 
 workflow Salmon {
 
@@ -11,7 +12,9 @@ workflow Salmon {
       File? rev_reads
       String reference_dir
       Int threads = 6
-   }
+    }
+
+    call Versions.Versions as Versions
 
     call Alignment.Salmon as Sal {
         input:
@@ -21,6 +24,17 @@ workflow Salmon {
             reference_dir = reference_dir,
             threads = threads
    }
+
+    call Utils.WriteStringsToFile as RunInfo {
+        input:
+            strings = ["workflow\tSalmon",
+                       "salmon\t"+Versions.salmon,
+                       "nsm-analysis\t"+Versions.package,
+                       "image\t"+Versions.image],
+            outfile = "~{sample_name}.runinfo"
+    }
+      
+
 
    output {
     File flenDist = Sal.flenDist
@@ -34,6 +48,7 @@ workflow Salmon {
     File expBias = Sal.expBias
     File obsBias3p = Sal.obsBias3p
     File metaInfo = Sal.metaInfo
+    File runinfo = RunInfo.outfile
    }
 
 
