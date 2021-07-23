@@ -109,6 +109,41 @@ task WriteStringsToFile {
 }
 
 
+task WriteMapToFile {
+  # map:: Map[String, String] map = {"key1": "value1", "key2": "value2"}
+  input {
+    Map[String,String] map
+    String outfile
+  }
+
+  command {
+    cp ${write_map( map )} ~{outfile}
+
+  }
+
+  output {
+    File outfile = outfile
+  }
+}
+
+task WriteJsonToFile {
+  # map:: Map[String, String] map = {"key1": "value1", "key2": "value2"}
+  input {
+    Object data
+    String outfile
+  }
+
+  command {
+    cp ${write_json( data )} ~{outfile}
+
+  }
+
+  output {
+    File outfile = outfile
+  }
+}
+
+
 task TotalReads {
   input {
     Array[File] QualityYieldMetricsFiles
