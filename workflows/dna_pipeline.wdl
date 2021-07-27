@@ -238,7 +238,7 @@ workflow DNAProcessing {
          references = references,
          scatter_settings = scatter_settings,
          input_bam = BamAddPipelineVersion.output_bam,
-         input_bam_index = MergeBamAlignment.output_bam_index,
+         input_bam_index = MergeBamAlignment.output_bam + '.bai',
          base_file_name = sample_name,
          final_vcf_base_name = sample_name + ".vcf"
    }
