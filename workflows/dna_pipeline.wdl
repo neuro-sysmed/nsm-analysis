@@ -185,8 +185,8 @@ workflow DNAProcessing {
 
    call AggregatedBamQC.AggregatedBamQC {
     input:
-      base_recalibrated_bam = aligned_bam,
-      base_recalibrated_bam_index = aligned_bam_index,
+      input_bam = aligned_bam,
+      input_bam_index = aligned_bam_index,
       base_name = sample_and_unmapped_bams.base_filename,
       sample_name = sample_name,
       recalibrated_bam_base_name = sample_and_unmapped_bams.base_filename,

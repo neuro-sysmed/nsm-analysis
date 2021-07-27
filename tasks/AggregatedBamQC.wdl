@@ -7,7 +7,7 @@ import "../structs/DNASeqStructs.wdl" as Structs
 workflow AggregatedBamQC {
 input {
     File input_bam
-    File bam_index
+    File input_bam_index
     String sample_name
     File haplotype_database_file
     DNASeqSingleSampleReferences references
@@ -19,7 +19,7 @@ input {
   call QC.CollectReadgroupBamQualityMetrics as CollectReadgroupBamQualityMetrics {
     input:
       input_bam = input_bam,
-      input_bam_index = bam_index,
+      input_bam_index = input_bam_index,
       output_bam_prefix = sample_name + ".readgroup",
       ref_dict = references.reference_fasta.ref_dict,
       ref_fasta = references.reference_fasta.ref_fasta,
@@ -30,7 +30,7 @@ input {
   call QC.CollectAggregationMetrics as CollectAggregationMetrics {
     input:
       input_bam = input_bam,
-      input_bam_index = bam_index,
+      input_bam_index = input_bam_index,
       output_bam_prefix = sample_name,
       ref_dict = references.reference_fasta.ref_dict,
       ref_fasta = references.reference_fasta.ref_fasta,
@@ -42,7 +42,7 @@ input {
     call QC.CheckFingerprint as CheckFingerprint {
       input:
         input_bam = input_bam,
-        input_bam_index = bam_index,
+        input_bam_index = input_bam_index,
         haplotype_database_file = haplotype_database_file,
         genotypes = fingerprint_genotypes_file,
         genotypes_index = fingerprint_genotypes_index,
@@ -55,7 +55,7 @@ input {
   call QC.CalculateReadGroupChecksum as CalculateReadGroupChecksum {
     input:
       input_bam = input_bam,
-      input_bam_index = bam_index,
+      input_bam_index = input_bam_index,
       read_group_md5_filename = sample_name + ".bam.read_group_md5",
   }
 
