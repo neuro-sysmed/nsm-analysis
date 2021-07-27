@@ -103,7 +103,7 @@ workflow DNAProcessing {
    call BamUtils.SortSam as SortBam {
       input:
          input_bam = BamAddPipelineVersion.output_bam,
-         output_bam_basename = sample_basename + ".aligned.duplicate_marked.sorted",
+         output_bam_basename = name + ".aligned.duplicate_marked.sorted",
          compression_level = compression_level,
    }
 
