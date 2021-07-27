@@ -189,9 +189,8 @@ workflow DNAProcessing {
       input_bam_index = aligned_bam_index,
       base_name = sample_and_unmapped_bams.base_filename,
       sample_name = sample_name,
-      recalibrated_bam_base_name = sample_and_unmapped_bams.base_filename,
       haplotype_database_file = references.haplotype_database_file,
-      references = references,
+      references = references
   }
 
 
