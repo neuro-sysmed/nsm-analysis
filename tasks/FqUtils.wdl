@@ -9,10 +9,10 @@ task FqToBam {
     String output_bam_filename
     String readgroup
     String sample_name 
-    String? library_name = "NA"
-    Int? compression_level = 2
-    String? outdir = "."
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String library_name = "NA"
+    Int compression_level = 2
+    String outdir = "."
+    String picard_jar = "/usr/local/jars/picard.jar"
 
   }
 

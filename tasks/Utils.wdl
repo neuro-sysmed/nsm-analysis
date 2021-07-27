@@ -58,7 +58,7 @@ task FileCopy {
 
 
   command {
-    cp "~{infile}" "~{new_file}"
+    cp "~{infile}" "~{outfile}"
   }
 
   output {
