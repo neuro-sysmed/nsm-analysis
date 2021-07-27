@@ -103,7 +103,7 @@ workflow DNAProcessing {
    call BamUtils.SortSam as SortBam {
       input:
          input_bam = BamAddPipelineVersion.output_bam,
-         output_bam_basename = name + ".aligned.duplicate_marked.sorted",
+         output_bam_basename = sample_name + ".aligned.duplicate_marked.sorted",
          compression_level = compression_level,
    }
 
@@ -152,7 +152,7 @@ workflow DNAProcessing {
             input:
                input_bam = SortBam.output_bam,
                input_bam_index = SortBam.output_bam_index,
-               output_bam_basename = sample_basename + ".aligned.duplicate_marked.sorted.bqsr",
+               output_bam_basename = sample_name + ".aligned.duplicate_marked.sorted.bqsr",
                recalibration_report = GatherBqsrReports.output_bqsr_report,
                sequence_group_interval = subgroup,
                ref_dict = references.reference_fasta.ref_dict,
@@ -238,7 +238,7 @@ workflow DNAProcessing {
          references = references,
          scatter_settings = scatter_settings,
          input_bam = BamAddPipelineVersion.output_bam,
-         input_bam_index = MergeBamAlignment.output_bam + '.bai',
+         input_bam_index = BamAddPipelineVersion.output_bam + '.bai',
          base_file_name = sample_name,
          final_vcf_base_name = sample_name + ".vcf"
    }
