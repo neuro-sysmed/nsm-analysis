@@ -6,17 +6,19 @@ version 1.0
 import "../tasks/Alignment.wdl" as Alignment
 import "../tasks/QC.wdl" as QC
 import "../tasks/BamUtils.wdl" as BamUtils
-import "../tasks/Utils.wdl" as Utils
 import "../tasks/Versions.wdl" as Versions
+import "../tasks/Utils.wdl" as Utils
+
 
 import "../tasks/AggregatedBamQC.wdl" as AggregatedBamQC
 
+import "haplotype_caller.wdl" as HaplotypeCaller
+
 
 import "../structs/DNASeqStructs.wdl" as Structs
-import "../vars/global.wdl" as global
 
 
-workflow DNAPreprocessing {
+workflow DNAProcessing {
 
    input {
       SampleAndUnmappedBams sample_and_unmapped_bams
@@ -26,18 +28,15 @@ workflow DNAPreprocessing {
       Boolean somatic = false
       Boolean bin_base_qualities = true
       Int compression_level = 5
+      Boolean hard_clip_reads = false
+      VariantCallingScatterSettings scatter_settings
+
    }
 
-
-
-
-
-   String sample_basename  = sample_and_unmapped_bams.base_filename
-   Boolean hard_clip_reads = false
-
-   call global.global
+   # Easier to refer to it later on.
+   String sample_name  = sample_and_unmapped_bams.sample_name
+   
    call Versions.Versions as Versions
-
 
    scatter (unmapped_bam in sample_and_unmapped_bams.unmapped_bams) {
 
@@ -47,14 +46,14 @@ workflow DNAPreprocessing {
       call QC.CollectQualityYieldMetrics as CollectQualityYieldMetrics {
          input:
          input_bam = unmapped_bam,
-         metrics_filename = bam_basename + ".ubam.qc.quality_yield_metrics",
+         metrics_filename = unmapped_bam + ".ubam.qc.quality_yield_metrics",
       }
 
 
       call Alignment.BwaMem as BwaMem {
          input:
             input_bam = unmapped_bam,
-            bam_basename = bam_basename + ".aligned.unsorted",
+            bam_basename = unmapped_bam + ".aligned.unsorted",
             reference_fasta = references.reference_fasta,
             compression_level = compression_level,
             hard_clip_reads = hard_clip_reads,      
@@ -71,8 +70,8 @@ workflow DNAPreprocessing {
    call BamUtils.MergeAndMarkDuplicates as MarkDuplicates {
       input:
          input_bams = BwaMem.aligned_bam,
-         output_bam_basename = sample_basename + ".aligned.unsorted.duplicates_marked",
-         metrics_filename = sample_basename + ".aligned.unsorted.duplicates_marked.bam.duplicate_metrics",
+         output_bam_basename = sample_basename + ".bam",
+         metrics_filename = sample_basename + ".bam.duplicate_metrics",
 #      total_input_size = SumFloats.total_size,
          compression_level = compression_level,
    }
@@ -189,7 +188,7 @@ workflow DNAPreprocessing {
       base_recalibrated_bam = aligned_bam,
       base_recalibrated_bam_index = aligned_bam_index,
       base_name = sample_and_unmapped_bams.base_filename,
-      sample_name = sample_and_unmapped_bams.sample_name,
+      sample_name = sample_name,
       recalibrated_bam_base_name = sample_and_unmapped_bams.base_filename,
       haplotype_database_file = references.haplotype_database_file,
       references = references,
@@ -230,9 +229,20 @@ workflow DNAPreprocessing {
             ref_fasta_index = references.reference_fasta.ref_fasta_index,
             target_interval_list = references.exome_calling_interval_list,
             bait_interval_list = references.exome_calling_interval_list
-  }
+      }
 
    }
+
+   call HaplotypeCaller.VariantCalling as HaplotypeCaller {
+      input:
+         DNASeqSingleSampleReferences references = references,
+         VariantCallingScatterSettings scatter_settings = scatter_settings,
+         File input_bam = MergeBamAlignment.outfile,
+         File input_bam_index = MergeBamAlignment.outfile + '.bai' ,
+         String base_file_name = sample_name,
+         String final_vcf_base_name = sample_name + ".vcf"
+   }
+
 
 
   output {

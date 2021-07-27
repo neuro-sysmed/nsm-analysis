@@ -218,11 +218,12 @@ task MergeAndMarkDuplicates {
   # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
 
   command {
+    mkdir qc
     java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
       MarkDuplicates \
       INPUT=~{sep=' INPUT=' input_bams} \
-      OUTPUT=~{output_bam_basename}.bam \
-      METRICS_FILE=~{metrics_filename} \
+      OUTPUT=bams/~{output_bam_basename}.bam \
+      METRICS_FILE=qc/~{metrics_filename} \
       VALIDATION_STRINGENCY=SILENT \
       ~{"READ_NAME_REGEX=" + read_name_regex} \
       ~{"SORTING_COLLECTION_SIZE_RATIO=" + sorting_collection_size_ratio} \

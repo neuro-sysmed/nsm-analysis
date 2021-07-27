@@ -6,11 +6,9 @@ import "../structs/DNASeqStructs.wdl" as Structs
 # WORKFLOW DEFINITION
 workflow AggregatedBamQC {
 input {
-    File base_recalibrated_bam
-    File base_recalibrated_bam_index
-    String base_name
+    File input_bam
+    File bam_index
     String sample_name
-    String recalibrated_bam_base_name
     File haplotype_database_file
     DNASeqSingleSampleReferences references
     File? fingerprint_genotypes_file
@@ -20,9 +18,9 @@ input {
   # QC the final BAM (consolidated after scattered BQSR)
   call QC.CollectReadgroupBamQualityMetrics as CollectReadgroupBamQualityMetrics {
     input:
-      input_bam = base_recalibrated_bam,
-      input_bam_index = base_recalibrated_bam_index,
-      output_bam_prefix = base_name + ".readgroup",
+      input_bam = input_bam,
+      input_bam_index = bam_index,
+      output_bam_prefix = sample_name + ".readgroup",
       ref_dict = references.reference_fasta.ref_dict,
       ref_fasta = references.reference_fasta.ref_fasta,
       ref_fasta_index = references.reference_fasta.ref_fasta_index
@@ -31,9 +29,9 @@ input {
   # QC the final BAM some more (no such thing as too much QC)
   call QC.CollectAggregationMetrics as CollectAggregationMetrics {
     input:
-      input_bam = base_recalibrated_bam,
-      input_bam_index = base_recalibrated_bam_index,
-      output_bam_prefix = base_name,
+      input_bam = input_bam,
+      input_bam_index = bam_index,
+      output_bam_prefix = sample_name,
       ref_dict = references.reference_fasta.ref_dict,
       ref_fasta = references.reference_fasta.ref_fasta,
       ref_fasta_index = references.reference_fasta.ref_fasta_index
@@ -43,12 +41,12 @@ input {
     # Check the sample BAM fingerprint against the sample array
     call QC.CheckFingerprint as CheckFingerprint {
       input:
-        input_bam = base_recalibrated_bam,
-        input_bam_index = base_recalibrated_bam_index,
+        input_bam = input_bam,
+        input_bam_index = bam_index,
         haplotype_database_file = haplotype_database_file,
         genotypes = fingerprint_genotypes_file,
         genotypes_index = fingerprint_genotypes_index,
-        output_basename = base_name,
+        output_basename = sample_name,
         sample = sample_name
     }
   }
@@ -56,9 +54,9 @@ input {
   # Generate a checksum per readgroup in the final BAM
   call QC.CalculateReadGroupChecksum as CalculateReadGroupChecksum {
     input:
-      input_bam = base_recalibrated_bam,
-      input_bam_index = base_recalibrated_bam_index,
-      read_group_md5_filename = recalibrated_bam_base_name + ".bam.read_group_md5",
+      input_bam = input_bam,
+      input_bam_index = bam_index,
+      read_group_md5_filename = sample_name + ".bam.read_group_md5",
   }
 
   output {

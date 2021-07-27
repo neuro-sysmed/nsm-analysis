@@ -56,12 +56,13 @@ task FileCopy {
     String outfile
   }
 
+
   command {
-    cp "~{infile}" "~{outfile}"
+    cp "~{infile}" "~{new_file}"
   }
 
   output {
-    File outfile = outfile  
+    File outfile = "~{outfile}"
   }
 
 }
