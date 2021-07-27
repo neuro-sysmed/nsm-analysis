@@ -70,8 +70,8 @@ workflow DNAProcessing {
    call BamUtils.MergeAndMarkDuplicates as MarkDuplicates {
       input:
          input_bams = BwaMem.aligned_bam,
-         output_bam_basename = sample_basename + ".bam",
-         metrics_filename = sample_basename + ".bam.duplicate_metrics",
+         output_bam_basename = sample_name + ".bam",
+         metrics_filename = sample_name + ".bam.duplicate_metrics",
 #      total_input_size = SumFloats.total_size,
          compression_level = compression_level,
    }
@@ -237,8 +237,8 @@ workflow DNAProcessing {
       input:
          references = references,
          scatter_settings = scatter_settings,
-         input_bam = MergeBamAlignment.outfile,
-         input_bam_index = MergeBamAlignment.outfile + '.bai' ,
+         input_bam = BamAddPipelineVersion.output_bam,
+         input_bam_index = MergeBamAlignment.output_bam_index,
          base_file_name = sample_name,
          final_vcf_base_name = sample_name + ".vcf"
    }
