@@ -3,19 +3,14 @@ version 1.0
 
 # Relative to wf file!
 
-import "../tasks/Utils.wdl" as Utils
-import "../tasks/Alignment.wdl" as Alignment
-import "../tasks/QC.wdl" as QC
-import "../tasks/BamUtils.wdl" as BamUtils
-import "../tasks/Versions.wdl" as Versions
-
-
-import "../tasks/AggregatedBamQC.wdl" as AggregatedBamQC
-
-import "../workflows/haplotype_caller.wdl" as HaplotypeCaller
-
-
-import "../structs/DNASeqStructs.wdl" as Structs
+import "./tasks/Utils.wdl" as Utils
+import "./tasks/Alignment.wdl" as Alignment
+import "./tasks/QC.wdl" as QC
+import "./tasks/BamUtils.wdl" as BamUtils
+import "./tasks/Versions.wdl" as Versions
+import "./tasks/AggregatedBamQC.wdl" as AggregatedBamQC
+import "./workflows/haplotype_caller.wdl" as HaplotypeCaller
+import "./structs/DNASeqStructs.wdl" as Structs
 
 
 workflow DNAProcessing {
@@ -67,7 +62,7 @@ workflow DNAProcessing {
       call QC.CollectUnsortedReadgroupBamQualityMetrics as CollectUnsortedReadgroupBamQualityMetrics {
          input:
             input_bam = BwaMem.aligned_bam,
-            output_bam_prefix = BwaMem.aligned_bam + ".qc.readgroup_bam_quality_metrics",
+            output_bam_prefix = basename(BwaMem.aligned_bam) + ".qc.readgroup_bam_quality_metrics",
       }
      
    }
@@ -75,8 +70,8 @@ workflow DNAProcessing {
    call BamUtils.MergeAndMarkDuplicates as MarkDuplicates {
       input:
          input_bams = BwaMem.aligned_bam,
-         output_bam_basename = sample_name + ".bam",
-         metrics_filename = sample_name + ".bam.duplicate_metrics",
+         output_bam_basename = sample_name,
+         metrics_filename = basename(BwaMem.aligned_bam) + ".duplicate_metrics",
 #      total_input_size = SumFloats.total_size,
          compression_level = compression_level,
    }
