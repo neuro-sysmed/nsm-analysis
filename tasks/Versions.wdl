@@ -81,7 +81,7 @@ task Image {
 
 task Singularity {
     input {
-      String singularity_cmd = "/usr/local/bin/singularity"
+      String singularity_cmd = "singularity"
     }
 
     command {
