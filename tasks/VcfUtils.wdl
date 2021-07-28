@@ -23,12 +23,11 @@ task MergeVCFs {
       -OUTPUT gvcfs/~{output_vcf_name}
   }
   runtime {
-#    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
     memory: 3000
   }
   output {
-    File output_vcf = "~{output_vcf_name}"
-    File output_vcf_index = "~{output_vcf_name}.tbi"
+    File output_vcf = "gvcfs/~{output_vcf_name}"
+    File output_vcf_index = "gvcfs/~{output_vcf_name}.tbi"
   }
 }
 

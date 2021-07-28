@@ -238,7 +238,7 @@ workflow DNAProcessing {
          input_bam = aligned_bam,
          input_bam_index = aligned_bam_index,
          base_file_name = sample_name,
-         final_vcf_base_name = sample_name + ".vcf"
+         final_vcf_base_name = sample_name
    }
 
 
@@ -264,6 +264,7 @@ workflow DNAProcessing {
       File output_bam       = aligned_bam
       File output_bam_index = aligned_bam_index
       File output_bam_md5   = aligned_bam_md5
+      File runinfo = RunInfo.outfile
 
       File metrics_duplicates = MarkDuplicates.duplicate_metrics
 
