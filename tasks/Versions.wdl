@@ -57,7 +57,7 @@ task Package {
 
 task Image {
     input {
-      String image = "/home/brugger/projects/kbr-tools/nsm-tools.sif"
+      String image = "/usr/local/images/nsm-tools.sif"
     }
 
     command {
@@ -69,8 +69,8 @@ task Image {
     }
 
     runtime {
-#        backend: "nsm-local"
-        image: "/data/analysis/nsm-tools.sif"
+        backend: "nsm-local"
+        image: "/usr/local/images/nsm-tools.sif"
     }
 
 
@@ -92,8 +92,8 @@ task Singularity {
     }
 
     runtime {
-#        backend: "nsm-local"
-        image: "/data/analysis/nsm-tools.sif"
+        backend: "nsm-local"
+#        image: "/data/analysis/nsm-tools.sif"
     }
 
     output {
