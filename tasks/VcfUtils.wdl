@@ -161,6 +161,7 @@ task GenotypeGVCF {
     String output_vcf_name
     File reference_fasta
     File reference_fasta_index
+    File reference_dict
     String gatk_cmd = "/usr/local/bin/gatk"
   }
 

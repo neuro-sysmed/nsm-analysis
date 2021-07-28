@@ -115,6 +115,7 @@ workflow VariantCalling {
       output_vcf_name = final_vcf_base_name + ".vcf",
       reference_fasta = references.reference_fasta.ref_fasta,
       reference_fasta_index = references.reference_fasta.ref_fasta_index,
+      reference_dict = references.reference_fasta.ref_dict,
   }
 
 
