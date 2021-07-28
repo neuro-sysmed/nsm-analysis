@@ -70,7 +70,7 @@ workflow DNAProcessing {
    call BamUtils.MergeAndMarkDuplicates as MarkDuplicates {
       input:
          input_bams = BwaMem.aligned_bam,
-         output_bam_basename = sample_name + ".aligned.unsorted.merged.bam",
+         output_bam_basename = sample_name + ".aligned.unsorted.merged",
          metrics_filename = sample_name + ".duplicate_metrics",
 #      total_input_size = SumFloats.total_size,
          compression_level = compression_level,
