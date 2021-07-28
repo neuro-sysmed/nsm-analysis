@@ -48,9 +48,9 @@ task SortSam {
     memory: 5000
   }
   output {
-    File output_bam = "~{output_bam_basename}.bam"
-    File output_bam_index = "~{output_bam_basename}.bai"
-    File output_bam_md5 = "~{output_bam_basename}.bam.md5"
+    File output_bam = "bams/~{output_bam_basename}.bam"
+    File output_bam_index = "bams/~{output_bam_basename}.bai"
+    File output_bam_md5 = "bams/~{output_bam_basename}.bam.md5"
   }
 }
 
