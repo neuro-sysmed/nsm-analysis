@@ -1,5 +1,7 @@
 version 1.0
 
+import "../structs/DNASeqStructs.wdl"
+
 
 # Combine multiple VCFs or GVCFs from scattered HaplotypeCaller runs
 task MergeVCFs {
@@ -10,15 +12,15 @@ task MergeVCFs {
     String picard_jar = "/usr/local/jars/picard.jar"
   }
 
-  Int disk_size = ceil(size(input_vcfs, "GiB") * 2.5) + 10
 
   # Using MergeVcfs instead of GatherVcfs so we can create indices
   # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
   command {
+    mkdir gvcfs
     java -Xms2000m -jar ~{picard_jar} \
       MergeVcfs \
       -INPUT ~{sep=' -INPUT ' input_vcfs} \
-      -OUTPUT ~{output_vcf_name}
+      -OUTPUT gvcfs/~{output_vcf_name}
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
@@ -36,7 +38,6 @@ task HardFilterVcf {
     File input_vcf_index
     String vcf_basename
     File interval_list
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     String gatk_cmd = "/usr/local/bin/gatk"
   }
 
@@ -72,11 +73,8 @@ task CNNScoreVariants {
     File ref_fasta
     File ref_fasta_index
     File ref_dict
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     String gatk_cmd = "/usr/local/bin/gatk"
   }
-
-  Int disk_size = ceil(size(bamout, "GiB") + size(ref_fasta, "GiB") + (size(input_vcf, "GiB") * 2))
 
   String base_vcf = basename(input_vcf)
   Boolean is_compressed = basename(base_vcf, "gz") != base_vcf
@@ -126,17 +124,10 @@ task FilterVariantTranches {
     File dbsnp_resource_vcf
     File dbsnp_resource_vcf_index
     String info_key
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     String gatk_cmd = "/usr/local/bin/gatk"
 
   }
 
-  Int disk_size = ceil(size(hapmap_resource_vcf, "GiB") +
-                        size(omni_resource_vcf, "GiB") +
-                        size(one_thousand_genomes_resource_vcf, "GiB") +
-                        size(dbsnp_resource_vcf, "GiB") +
-                        (size(input_vcf, "GiB") * 2)
-                      ) + 20
 
   command {
 
@@ -161,5 +152,37 @@ task FilterVariantTranches {
   runtime {
     memory: 7000
     cpus: 2
+  }
+}
+
+# Combine multiple VCFs or GVCFs from scattered HaplotypeCaller runs
+task GenotypeGVCF {
+  input {
+    File input_gvcf
+    String output_vcf_name
+    ReferenceFasta reference_fasta
+    String gatk_cmd = "/usr/local/bin/gatk"
+  }
+
+
+  # Using MergeVcfs instead of GatherVcfs so we can create indices
+  # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
+  command {
+    mkdir vcfs
+
+    ~{gatk_cmd} GenotypeGVCFs \
+      -R ~{reference_fasta} \
+      -V ~{input_gvcf} \
+      -O vcfs/~{output_vcf_name} \
+      -G StandardAnnotation -G AS_StandardAnnotation 
+  }
+
+  runtime {
+    memory: 3000
+  }
+
+  output {
+    File output_vcf = "vcfs/~{output_vcf_name}"
+    File output_vcf_index = "vcfs/~{output_vcf_name}.tbi"
   }
 }

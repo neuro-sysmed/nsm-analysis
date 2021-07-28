@@ -242,6 +242,21 @@ workflow DNAProcessing {
    }
 
 
+    call Utils.WriteStringsToFile as RunInfo {
+        input:
+            strings = ["workflow\tdna-pipeline",
+                       "bwa\t"+Versions.bwa,
+                       "picard\t"+Versions.picard,
+                       "gatk\t"+Versions.gatk,
+                       "samtools\t"+Versions.samtools,
+                       "nsm-analysis\t"+Versions.package,
+                       "image\t"+Versions.image
+                       "singularity\t"+Versions.singularity
+                     ],
+            outfile = "~{sample_name}.runinfo"
+    }
+
+
 
   output {
 
@@ -289,6 +304,16 @@ workflow DNAProcessing {
       File? qc_wgs_metrics = CollectWgsMetrics.metrics
       File? qc_raw_wgs_metrics = CollectRawWgsMetrics.metrics
       File? qc_Hs_metrics = CollectHsMetrics.metrics
+
+
+      File output_vcf = HaplotypeCaller.output_vcf
+      File output_vcf_index = HaplotypeCaller.output_vcf_index
+      File output_vcf = HaplotypeCaller.output_gvcf
+      File output_vcf_index = HaplotypeCaller.output_gvcf_index
+
+      File vcf_summary_metrics = HaplotypeCaller.summary_metrics
+      File vcf_detail_metrics = HaplotypeCaller.detail_metrics
+
 
    }
 

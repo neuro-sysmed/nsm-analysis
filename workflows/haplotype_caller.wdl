@@ -9,11 +9,6 @@ import "../tasks/Utils.wdl" as Utils
 import "../tasks/VcfUtils.wdl" as VcfUtils
 
 
-
-
-#import "../../vars/global.wdl" as global
-
-
 workflow VariantCalling {
 
    input {
@@ -75,7 +70,7 @@ workflow VariantCalling {
   }
 
   # Combine by-interval (g)VCFs into a single sample (g)VCF file
-  String merge_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
+  String merge_suffix = if make_gvcf then ".gvcf.gz" else ".vcf.gz"
   call VcfUtils.MergeVCFs as MergeVCFs {
     input:
       input_vcfs = vcfs_to_merge,
@@ -114,13 +109,22 @@ workflow VariantCalling {
 # gatk GenotypeGVCFs -V NA12878.g.vcf.gz -R Homo_sapiens_assembly38.fasta -O NA12878.vcf  -G StandardAnnotation -G AS_StandardAnnotation 
 # gatk VariantRecalibrator -O NA12878.snp.recall -V NA12878.vcf --resource:hapmap,known=false,training=true,truth=true,prior=15.0 ../../hg38/hapmap_3.3.hg38.vcf.gz --resource:omni,known=false,training=true,truth=false,prior=12.0 ../../hg38/1000G_omni2.5.hg38.vcf.gz --resource:1000G,known=false,training=true,truth=false,prior=10.0 ../../hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz --resource:dbsnp,known=true,training=false,truth=false,prior=2.0 ../../hg38/Homo_sapiens_assembly38.dbsnp138.vcf  --tranches-file output.tranches --use-allele-specific-annotations  --trust-all-polymorphic --max-gaussians 6  -an AS_MQRankSum -an AS_ReadPosRankSum -an AS_FS -an AS_MQ -an AS_SOR -tranche 100.0 -tranche 99.95 -tranche 99.9 -tranche 99.5 -tranche 99.0 -tranche 97.0 -tranche 96.0 -tranche 95.0 -tranche 94.0 -tranche 93.5 -tranche 93.0 -tranche 92.0 -tranche 91.0 -tranche 90.0 
 
+  call VcfUtils.GenotypeGVCFs as GenotypeGVCF {
+    input:
+      input_gvcf = MergeVCFs.output_vcf,
+      output_vcf_name = final_vcf_base_name + ".vcf",
+      reference_fasta = reference_fasta,
+  }
+
 
 
   output {
     File vcf_summary_metrics = CollectVariantCallingMetrics.summary_metrics
     File vcf_detail_metrics = CollectVariantCallingMetrics.detail_metrics
-    File output_vcf = MergeVCFs.output_vcf
-    File output_vcf_index = MergeVCFs.output_vcf_index
+    File output_gvcf = MergeVCFs.output_vcf
+    File output_gvcf_index = MergeVCFs.output_vcf_index
+    File output_vcf = GenotypeGVCF.output_vcf
+    File output_vcf_index = GenotypeGVCF.output_vcf_index
   }
       
 
