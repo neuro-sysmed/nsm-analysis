@@ -239,7 +239,7 @@ task MergeAndMarkDuplicates {
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
-    File output_bam = "bams/~{output_bam_basename}.bam"
+    File output_bam = "~{output_bam_basename}.bam"
     File duplicate_metrics = "qc/~{metrics_filename}"
   }
 }
