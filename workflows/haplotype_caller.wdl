@@ -92,12 +92,35 @@ workflow VariantCalling {
       is_gvcf = true,
   }
 
-  # QC the (g)VCF
+  call VcfUtils.GenotypeGVCF as GenotypeGVCF {
+    input:
+      input_gvcf = MergeVCFs.output_vcf,
+      input_gvcf_index = MergeVCFs.output_vcf_index,
+      output_vcf_name = final_vcf_base_name + ".vcf.gz",
+      reference_fasta = references.reference_fasta.ref_fasta,
+      reference_fasta_index = references.reference_fasta.ref_fasta_index,
+      reference_dict = references.reference_fasta.ref_dict,
+  }
+
+  # QC the gVCF
   call QC.CollectVariantCallingMetrics as CollectVariantCallingMetrics {
     input:
       input_vcf = MergeVCFs.output_vcf,
       input_vcf_index = MergeVCFs.output_vcf_index,
-      metrics_basename = final_vcf_base_name,
+      metrics_basename = final_vcf_base_name+".gvcf",
+      dbsnp_vcf = references.dbsnp_vcf,
+      dbsnp_vcf_index = references.dbsnp_vcf_index,
+      ref_dict = references.reference_fasta.ref_dict,
+      evaluation_interval_list = references.evaluation_interval_list,
+      is_gvcf = true,
+  }
+
+  # QC the VCF
+  call QC.CollectVariantCallingMetrics as CollectVariantCallingMetrics {
+    input:
+      input_vcf = GenotypeGVCF.output_vcf,
+      input_vcf_index = GenotypeGVCF.output_vcf_index,
+      metrics_basename = final_vcf_base_name+".vcf",
       dbsnp_vcf = references.dbsnp_vcf,
       dbsnp_vcf_index = references.dbsnp_vcf_index,
       ref_dict = references.reference_fasta.ref_dict,
@@ -109,15 +132,6 @@ workflow VariantCalling {
 # gatk GenotypeGVCFs -V NA12878.g.vcf.gz -R Homo_sapiens_assembly38.fasta -O NA12878.vcf  -G StandardAnnotation -G AS_StandardAnnotation 
 # gatk VariantRecalibrator -O NA12878.snp.recall -V NA12878.vcf --resource:hapmap,known=false,training=true,truth=true,prior=15.0 ../../hg38/hapmap_3.3.hg38.vcf.gz --resource:omni,known=false,training=true,truth=false,prior=12.0 ../../hg38/1000G_omni2.5.hg38.vcf.gz --resource:1000G,known=false,training=true,truth=false,prior=10.0 ../../hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz --resource:dbsnp,known=true,training=false,truth=false,prior=2.0 ../../hg38/Homo_sapiens_assembly38.dbsnp138.vcf  --tranches-file output.tranches --use-allele-specific-annotations  --trust-all-polymorphic --max-gaussians 6  -an AS_MQRankSum -an AS_ReadPosRankSum -an AS_FS -an AS_MQ -an AS_SOR -tranche 100.0 -tranche 99.95 -tranche 99.9 -tranche 99.5 -tranche 99.0 -tranche 97.0 -tranche 96.0 -tranche 95.0 -tranche 94.0 -tranche 93.5 -tranche 93.0 -tranche 92.0 -tranche 91.0 -tranche 90.0 
 
-  call VcfUtils.GenotypeGVCF as GenotypeGVCF {
-    input:
-      input_gvcf = MergeVCFs.output_vcf,
-      input_gvcf_index = MergeVCFs.output_vcf_index,
-      output_vcf_name = final_vcf_base_name + ".vcf.gz",
-      reference_fasta = references.reference_fasta.ref_fasta,
-      reference_fasta_index = references.reference_fasta.ref_fasta_index,
-      reference_dict = references.reference_fasta.ref_dict,
-  }
 
 
 
