@@ -250,7 +250,7 @@ workflow DNAProcessing {
                        "gatk\t"+Versions.gatk,
                        "samtools\t"+Versions.samtools,
                        "nsm-analysis\t"+Versions.package,
-                       "image\t"+Versions.image
+                       "image\t"+Versions.image,
                        "singularity\t"+Versions.singularity
                      ],
             outfile = "~{sample_name}.runinfo"
