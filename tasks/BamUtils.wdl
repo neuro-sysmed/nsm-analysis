@@ -30,10 +30,11 @@ task SortSam {
   Int disk_size = ceil(sort_sam_disk_multiplier * size(input_bam, "GiB")) + 20
 
   command {
+    mkdir bams
     java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
       SortSam \
       INPUT=~{input_bam} \
-      OUTPUT=~{output_bam_basename}.bam \
+      OUTPUT=bams/~{output_bam_basename}.bam \
       SORT_ORDER="coordinate" \
       CREATE_INDEX=true \
       CREATE_MD5_FILE=true \
@@ -218,11 +219,11 @@ task MergeAndMarkDuplicates {
   # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
 
   command {
-    mkdir qc bams
+    mkdir qc 
     java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
       MarkDuplicates \
       INPUT=~{sep=' INPUT=' input_bams} \
-      OUTPUT=bams/~{output_bam_basename}.bam \
+      OUTPUT=~{output_bam_basename} \
       METRICS_FILE=qc/~{metrics_filename} \
       VALIDATION_STRINGENCY=SILENT \
       ~{"READ_NAME_REGEX=" + read_name_regex} \
