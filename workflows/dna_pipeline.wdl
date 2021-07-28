@@ -38,15 +38,20 @@ workflow DNAProcessing {
    
    call Versions.Versions as Versions
 
+   call Utils.Sleep {
+      input:
+        linker = Versions.Star
+   }
+
    scatter (unmapped_bam in sample_and_unmapped_bams.unmapped_bams) {
 
-      String bam_basename = basename(unmapped_bam, sample_and_unmapped_bams.unmapped_bam_suffix)
+      String bam_basename = basename(unmapped_bam)
 
 
       call QC.CollectQualityYieldMetrics as CollectQualityYieldMetrics {
          input:
          input_bam = unmapped_bam,
-         metrics_filename = bam_basename + ".ubam.quality_yield_metrics",
+         metrics_filename = bam_basename + ".quality_yield_metrics",
       }
 
 

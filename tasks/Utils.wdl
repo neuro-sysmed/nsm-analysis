@@ -264,3 +264,28 @@ task ScatterIntervalList {
     memory: 2000
   }
 }
+
+
+workflow Sleep {
+  input {
+    Int timeout = 60
+    String? linker
+  }
+
+  call SleepTask {
+    input:
+      timeout = timeout
+  }
+}
+
+task SleepTask {
+  input {
+    Int timeout = 60
+  }
+
+  command {
+    sleep ~{timeout}
+  }
+
+
+}

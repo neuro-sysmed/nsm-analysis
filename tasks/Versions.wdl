@@ -31,7 +31,7 @@ workflow Versions {
 
 task Package {
     input {
-      String version_file = "../version.json"
+      String version_file = "/usr/local/lib/nsm-analysis/version.json"
     }
   # returns null for unset keys
     Map[String, String?] version_map = read_json(version_file)
@@ -263,4 +263,3 @@ task Bedtools {
         String version = read_string(stdout())
     }
 }
-
