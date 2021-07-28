@@ -223,7 +223,7 @@ task MergeAndMarkDuplicates {
     java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
       MarkDuplicates \
       INPUT=~{sep=' INPUT=' input_bams} \
-      OUTPUT=~{output_bam_basename} \
+      OUTPUT=~{output_bam_basename}.bam \
       METRICS_FILE=qc/~{metrics_filename} \
       VALIDATION_STRINGENCY=SILENT \
       ~{"READ_NAME_REGEX=" + read_name_regex} \
