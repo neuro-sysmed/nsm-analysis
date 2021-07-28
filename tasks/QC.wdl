@@ -14,9 +14,9 @@ task CollectQualityYieldMetrics {
     mkdir qc
     java -Xms2000m -jar ~{picard_jar} \
       CollectQualityYieldMetrics \
-      INPUT=qc/~{input_bam} \
+      INPUT=~{input_bam} \
       OQ=true \
-      OUTPUT=~{metrics_filename}
+      OUTPUT=qc/~{metrics_filename}
   }
 
   runtime {
