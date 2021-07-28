@@ -38,10 +38,10 @@ workflow DNAProcessing {
    
    call Versions.Versions as Versions
 
-   call Utils.Sleep {
-      input:
-        linker = Versions.star
-   }
+ #  call Utils.Sleep {
+ #     input:
+ #       linker = Versions.star
+ #  }
 
    scatter (unmapped_bam in sample_and_unmapped_bams.unmapped_bams) {
 
