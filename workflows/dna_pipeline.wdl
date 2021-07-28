@@ -314,6 +314,8 @@ workflow DNAProcessing {
 
       File vcf_summary_metrics = HaplotypeCaller.vcf_summary_metrics
       File vcf_detail_metrics = HaplotypeCaller.vcf_detail_metrics
+      File gvcf_summary_metrics = HaplotypeCaller.gvcf_summary_metrics
+      File gvcf_detail_metrics = HaplotypeCaller.gvcf_detail_metrics
 
 
    }

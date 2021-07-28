@@ -103,7 +103,7 @@ workflow VariantCalling {
   }
 
   # QC the gVCF
-  call QC.CollectVariantCallingMetrics as CollectVariantCallingMetrics {
+  call QC.CollectVariantCallingMetrics as CollectGvcfVariantCallingMetrics {
     input:
       input_vcf = MergeVCFs.output_vcf,
       input_vcf_index = MergeVCFs.output_vcf_index,
@@ -136,12 +136,14 @@ workflow VariantCalling {
 
 
   output {
-    File vcf_summary_metrics = CollectVariantCallingMetrics.summary_metrics
-    File vcf_detail_metrics = CollectVariantCallingMetrics.detail_metrics
-    File output_gvcf = MergeVCFs.output_vcf
-    File output_gvcf_index = MergeVCFs.output_vcf_index
-    File output_vcf = GenotypeGVCF.output_vcf
-    File output_vcf_index = GenotypeGVCF.output_vcf_index
+    File gvcf_summary_metrics = CollectGvcfVariantCallingMetrics.summary_metrics
+    File gvcf_detail_metrics  = CollectGvcfVariantCallingMetrics.detail_metrics
+    File vcf_summary_metrics  = CollectVariantCallingMetrics.summary_metrics
+    File vcf_detail_metrics   = CollectVariantCallingMetrics.detail_metrics
+    File output_gvcf          = MergeVCFs.output_vcf
+    File output_gvcf_index    = MergeVCFs.output_vcf_index
+    File output_vcf           = GenotypeGVCF.output_vcf
+    File output_vcf_index     = GenotypeGVCF.output_vcf_index
   }
       
 
