@@ -46,14 +46,14 @@ workflow DNAProcessing {
       call QC.CollectQualityYieldMetrics as CollectQualityYieldMetrics {
          input:
          input_bam = unmapped_bam,
-         metrics_filename = unmapped_bam + ".ubam.qc.quality_yield_metrics",
+         metrics_filename = bam_basename + ".ubam.quality_yield_metrics",
       }
 
 
       call Alignment.BwaMem as BwaMem {
          input:
             input_bam = unmapped_bam,
-            bam_basename = unmapped_bam + ".aligned.unsorted",
+            bam_basename = bam_basename + ".aligned.unsorted",
             reference_fasta = references.reference_fasta,
             compression_level = compression_level,
             hard_clip_reads = hard_clip_reads,      
