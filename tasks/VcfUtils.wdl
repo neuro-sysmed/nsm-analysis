@@ -158,6 +158,7 @@ task FilterVariantTranches {
 task GenotypeGVCF {
   input {
     File input_gvcf
+    File input_gvcf_index
     String output_vcf_name
     File reference_fasta
     File reference_fasta_index

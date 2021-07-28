@@ -112,6 +112,7 @@ workflow VariantCalling {
   call VcfUtils.GenotypeGVCF as GenotypeGVCF {
     input:
       input_gvcf = MergeVCFs.output_vcf,
+      input_gvcf_index = MergeVCFs.output_vcf_index,
       output_vcf_name = final_vcf_base_name + ".vcf",
       reference_fasta = references.reference_fasta.ref_fasta,
       reference_fasta_index = references.reference_fasta.ref_fasta_index,
