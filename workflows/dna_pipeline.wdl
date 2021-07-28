@@ -71,7 +71,7 @@ workflow DNAProcessing {
       input:
          input_bams = BwaMem.aligned_bam,
          output_bam_basename = sample_name,
-         metrics_filename = basename(BwaMem.aligned_bam) + ".duplicate_metrics",
+         metrics_filename = sample_name + ".duplicate_metrics",
 #      total_input_size = SumFloats.total_size,
          compression_level = compression_level,
    }
