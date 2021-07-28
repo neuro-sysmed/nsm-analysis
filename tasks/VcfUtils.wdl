@@ -160,7 +160,7 @@ task GenotypeGVCF {
   input {
     File input_gvcf
     String output_vcf_name
-    ReferenceFasta reference_fasta
+    File reference_fasta
     String gatk_cmd = "/usr/local/bin/gatk"
   }
 
