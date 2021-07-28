@@ -308,8 +308,8 @@ workflow DNAProcessing {
 
       File output_vcf = HaplotypeCaller.output_vcf
       File output_vcf_index = HaplotypeCaller.output_vcf_index
-      File output_vcf = HaplotypeCaller.output_gvcf
-      File output_vcf_index = HaplotypeCaller.output_gvcf_index
+      File output_gvcf = HaplotypeCaller.output_gvcf
+      File output_gvcf_index = HaplotypeCaller.output_gvcf_index
 
       File vcf_summary_metrics = HaplotypeCaller.summary_metrics
       File vcf_detail_metrics = HaplotypeCaller.detail_metrics
