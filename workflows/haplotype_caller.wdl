@@ -113,7 +113,7 @@ workflow VariantCalling {
     input:
       input_gvcf = MergeVCFs.output_vcf,
       output_vcf_name = final_vcf_base_name + ".vcf",
-      reference_fasta = reference_fasta,
+      reference_fasta = references.reference_fasta.ref_fasta,
   }
 
 
