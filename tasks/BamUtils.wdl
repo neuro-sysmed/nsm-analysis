@@ -218,7 +218,7 @@ task MergeAndMarkDuplicates {
   # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
 
   command {
-    mkdir qc
+    mkdir qc bams
     java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
       MarkDuplicates \
       INPUT=~{sep=' INPUT=' input_bams} \
