@@ -1,9 +1,11 @@
 version 1.0
 
 import "../tasks/BamUtils.wdl" as BamUtils
+import "../tasks/Utils.wdl" as Utils
+import "../tasks/Versions.wdl" as Versions
 
 
-workflow BamsToUnalignedBams {
+workflow BamToUnalignedBam {
 
    input {
       File input_bam
@@ -14,6 +16,9 @@ workflow BamsToUnalignedBams {
 
    String bam_basename = basename(input_bam, mapped_bam_suffix)
 
+   call Versions.Versions as Versions
+
+
    call BamUtils.RevertSam as RevertSam {
       input:
          input_bam = input_bam,
@@ -21,8 +26,21 @@ workflow BamsToUnalignedBams {
          outdir = outdir
    }
 
+
+    call Utils.WriteStringsToFile as RunInfo {
+        input:
+            strings = ["workflow\tBamToUnalignedBam",
+                       "picard\t"+Versions.picard,            
+                       "nsm-analysis\t"+Versions.package,
+                       "image\t"+Versions.image],
+            outfile = "~{sample_name}.runinfo"
+    }
+      
+
+
    output {
       File ubam = RevertSam.output_bam
+      File runinfo = RunInfo.outfile
    }
 
 
