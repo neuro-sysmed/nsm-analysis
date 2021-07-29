@@ -1,12 +1,13 @@
 {
   "VariantCalling.input_bam" : "TenK.bam",
   "VariantCalling.input_bam_index"  : "TenK.bai",
-  "VariantCalling.base_file_name"  : "TenK",
-  "VariantCalling.final_vcf_base_name" : "TenK",
+  "VariantCalling.sample_name"  : "TenK",
+
   "VariantCalling.scatter_settings": {
     "haplotype_scatter_count": "10",
     "break_bands_at_multiples_of": "0"
   },
+
   "VariantCalling.references": {
     "contamination_sites_ud": "/usr/local/refs/hg38/contamination-resources/1000g/1000g.phase3.100k.b38.vcf.gz.dat.UD",
     "contamination_sites_bed": "/usr/local/refs/hg38/contamination-resources/1000g/1000g.phase3.100k.b38.vcf.gz.dat.bed",
@@ -38,9 +39,3 @@
   }
 }
 
-
-{
-
-
-
-}

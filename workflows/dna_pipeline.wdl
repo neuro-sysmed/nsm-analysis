@@ -237,8 +237,7 @@ workflow DNAProcessing {
          scatter_settings = scatter_settings,
          input_bam = aligned_bam,
          input_bam_index = aligned_bam_index,
-         base_file_name = sample_name,
-         final_vcf_base_name = sample_name
+         sample_name = sample_name,
    }
 
 
