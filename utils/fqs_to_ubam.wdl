@@ -13,10 +13,13 @@ workflow FqToUnalignedBam {
       File fq_fwd
       File? fq_rev
       String out_name
+      String? sample_name
       String? readgroup
+      String library_name = "NA"
    }
 
-   String final_readgroup = if defined(readgroup) then readgroup else out_name
+   String fixed_sample_name = if defined(sample_name) then sample_name else out_name
+   String fixed_readgroup = if defined(readgroup) then readgroup else out_name
 
    call Versions.Versions as Versions
 
@@ -25,8 +28,9 @@ workflow FqToUnalignedBam {
          fq_fwd = fq_fwd,
          fq_rev =  fq_rev,
          output_bam_filename = "~{out_name}.ubam",
-         readgroup = "~{final_readgroup}",
-         sample_name = sample_name,
+         readgroup = "~{fixed_readgroup}",
+         sample_name = fixed_sample_name,
+         library_name = library_name,
          outdir = "."
    }
 
