@@ -5,7 +5,7 @@ version 1.0
 task FqToBam {
   input {
     File fq_fwd
-    File fq_rev
+    File? fq_rev
     String output_bam_filename
     String readgroup
     String sample_name 
@@ -22,15 +22,25 @@ task FqToBam {
       mkdir "~{outdir}/"
     fi
 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
-      FastqToSam \
-      -FASTQ ~{fq_fwd} \
-      -FASTQ2 ~{fq_rev} \
-      -OUTPUT ~{output_bam_filename} \
-      -READ_GROUP_NAME ~{readgroup} \
-      -SAMPLE_NAME ~{sample_name} \
-      -LIBRARY_NAME ~{library_name} 
 
+    if [[-z fq_rev]]; then
+      java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+        FastqToSam \
+        -FASTQ ~{fq_fwd} \
+        -OUTPUT ~{output_bam_filename} \
+        -READ_GROUP_NAME ~{readgroup} \
+        -SAMPLE_NAME ~{sample_name} \
+        -LIBRARY_NAME ~{library_name} 
+    else
+      java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+        FastqToSam \
+        -FASTQ ~{fq_fwd} \
+        -FASTQ2 ~{fq_rev} \
+        -OUTPUT ~{output_bam_filename} \
+        -READ_GROUP_NAME ~{readgroup} \
+        -SAMPLE_NAME ~{sample_name} \
+        -LIBRARY_NAME ~{library_name} 
+    fi
   }
   runtime {
 #    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.23.8"
