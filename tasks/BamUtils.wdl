@@ -86,9 +86,9 @@ task RevertSam {
   input {
     File input_bam
     String output_bam_filename
-    Int? compression_level = 2
-    String? picard_jar = "/usr/local/jars/picard.jar"
-    String? outdir = "."
+    Int compression_level = 2
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String outdir = "."
   }
 
   command {
