@@ -33,7 +33,7 @@ workflow BamToUnalignedBam {
                        "picard\t"+Versions.picard,            
                        "nsm-analysis\t"+Versions.package,
                        "image\t"+Versions.image],
-            outfile = "~{sample_name}.runinfo"
+            outfile = "~{bam_basename}.runinfo"
     }
       
 
