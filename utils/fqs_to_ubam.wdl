@@ -35,7 +35,6 @@ workflow MakeUnalignedBam {
         input:
             bams = bamfiles,
             output_bam_basename = output_bam_filename
-
     }
 
 
