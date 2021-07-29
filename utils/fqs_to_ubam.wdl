@@ -3,45 +3,46 @@ version 1.0
 import "../tasks/BamUtils.wdl" as BamUtils
 import "../tasks/FqUtils.wdl" as FqUtils
 import "../structs/DNASeqStructs.wdl"
+import "../tasks/Utils.wdl" as Utils
+import "../tasks/Versions.wdl" as Versions
 
 
-workflow MakeUnalignedBam {
+workflow FqToUnalignedBam {
 
    input {
-      Array[File] bams = []
-      Array[SampleFQ] sample_fqs
-      String output_bam_filename
+      File fq_fwd
+      File? fq_rev
+      String out_name
+      String? readgroup
    }
 
+   String final_readgroup = if defined(readgroup) then readgroup else out_name
 
-    scatter (sample_fq in sample_fqs) {
+   call Versions.Versions as Versions
 
-        call FqUtils.FqToBam as FqToBam {
-            input:
-                fq_fwd = sample_fq.fwd,
-                fq_rev =  sample_fq.rev,
-                output_bam_filename = "~{sample_fq.readgroup}.ubam",
-                readgroup = "~{sample_fq.readgroup}",
-                sample_name = sample_fq.sample_name,
-                outdir = "."
-        }
+   call FqUtils.FqToBam as FqToBam {
+      input:
+         fq_fwd = fq_fwd,
+         fq_rev =  fq_rev,
+         output_bam_filename = "~{out_name}.ubam",
+         readgroup = "~{final_readgroup}",
+         sample_name = sample_name,
+         outdir = "."
+   }
 
-
-    }
-
-    Array[String] bamfiles = flatten([bams, FqToBam.output_bam])
-
-    call BamUtils.MergeUnalignedBams as MergeUnalignedBams {
+    call Utils.WriteStringsToFile as RunInfo {
         input:
-            bams = bamfiles,
-            output_bam_basename = output_bam_filename
+            strings = ["workflow\tFqToUnalignedBam",
+                       "picard\t"+Versions.picard,            
+                       "nsm-analysis\t"+Versions.package,
+                       "image\t"+Versions.image],
+            outfile = "~{out_name}.runinfo"
     }
-
-
 
 
    output {
-      File bam_file = MergeUnalignedBams.output_bam
+      File ubam = FqToBam.output_bam
+      File runinfo = RunInfo.outfile
    }
 
 
