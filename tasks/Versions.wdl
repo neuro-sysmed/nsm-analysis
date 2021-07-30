@@ -49,9 +49,12 @@ task Package {
             (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) end' \
             < ~{version_file})
 
-        echo "$RepoVersion"
+        echo $RepoVersion
     }
 
+    runtime {
+        backend: "nsm-local"
+    }
 
     output {
 #        String version = version_str
