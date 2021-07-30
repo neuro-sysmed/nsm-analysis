@@ -41,7 +41,7 @@ task Package {
 #            else "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}"
 
     command {
-        RepoVersion=$(jq 'if .dev then 
+        RepoVersion=$(jq -r 'if .dev then 
             (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) +"-dev"+(.dev|tostring) 
             elif .rc then
             (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) +"-rc"+(.rc|tostring) 
@@ -49,7 +49,7 @@ task Package {
             (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) end' \
             < ~{version_file})
 
-        echo $RepoVersion
+        echo "$RepoVersion"
     }
 
     runtime {
