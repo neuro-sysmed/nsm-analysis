@@ -34,18 +34,28 @@ task Package {
       String version_file = "/usr/local/lib/nsm-analysis/version.json"
     }
   # returns null for unset keys
-    Map[String, String?] version_map = read_json(version_file)
+#    Map[String, String?] version_map = read_json(version_file)
 
-    String version_str = if defined(version_map['dev']) 
-            then "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}-dev~{version_map['dev']}" 
-            else "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}"
+#    String version_str = if defined(version_map['dev']) 
+#            then "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}-dev~{version_map['dev']}" 
+#            else "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}"
 
     command {
+        RepoVersion=$(jq 'if .dev then 
+            (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) +"-dev"+(.dev|tostring) 
+            elif .rc then
+            (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) +"-rc"+(.rc|tostring) 
+            else
+            (.major|tostring) + "." + (.minor|tostring) + "." + (.patch|tostring) end' \
+            < ~{version_file})
+
+        echo "$RepoVersion"
     }
 
 
     output {
-        String version = version_str
+#        String version = version_str
+        String version = read_string(stdout())
     }
 
     parameter_meta {
