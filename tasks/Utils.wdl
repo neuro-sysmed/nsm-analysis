@@ -101,8 +101,12 @@ task WriteStringsToFile {
 
   command {
     cp ${write_lines( strings )} ~{outfile}
-
   }
+
+  runtime {
+      backend: "nsm-local"
+  }
+
 
   output {
     File outfile = outfile
