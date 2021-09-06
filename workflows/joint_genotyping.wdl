@@ -108,7 +108,8 @@ workflow JointGenotyping {
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
         ref_dict = ref_dict,
-        dbsnp_vcf = dbsnp_vcf
+        dbsnp_vcf = dbsnp_vcf,
+        dbsnp_vcf_index = dbsnp_resource_vcf_index
     }
 
     File genotyped_vcf =  GenotypeGVCFs.output_vcf

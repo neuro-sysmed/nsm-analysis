@@ -128,6 +128,7 @@ task GenotypeGVCFs {  #keep
     File ref_dict
 
     File dbsnp_vcf
+    File dbsnp_vcf_index
 
     # This is needed for gVCFs generated with GATK3 HaplotypeCaller
     Boolean allow_old_rms_mapping_quality_annotation_data = false
