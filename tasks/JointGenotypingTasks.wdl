@@ -1,7 +1,7 @@
 version 1.0
 
 
-task CheckSamplesUnique {
+task CheckSamplesUnique { #keep
   input {
     File sample_name_map
     Int sample_num_threshold = 50
@@ -32,7 +32,7 @@ task CheckSamplesUnique {
   }
 }
 
-task SplitIntervalList {
+task SplitIntervalList { #keep
 
   input {
     File interval_list
@@ -40,6 +40,7 @@ task SplitIntervalList {
     File ref_fasta
     File ref_fasta_index
     File ref_dict
+    Boolean sample_names_unique_done # this is needed to ensure not running before prev step done. Stupid!
     String scatter_mode = "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
   }
 
@@ -64,13 +65,11 @@ task SplitIntervalList {
   }
 }
 
-task ImportGVCFs {
+task ImportGVCFs { #keep
 
   input {
     File sample_name_map
     File interval
-    File ref_fasta_index
-    File ref_dict
 
     String workspace_dir_name
 
@@ -115,7 +114,7 @@ task ImportGVCFs {
   }
 }
 
-task GenotypeGVCFs {
+task GenotypeGVCFs {  #keep
 
   input {
     File workspace_tar
@@ -127,7 +126,7 @@ task GenotypeGVCFs {
     File ref_fasta_index
     File ref_dict
 
-    String dbsnp_vcf
+    File dbsnp_vcf
 
     # This is needed for gVCFs generated with GATK3 HaplotypeCaller
     Boolean allow_old_rms_mapping_quality_annotation_data = false
@@ -169,59 +168,8 @@ task GenotypeGVCFs {
   }
 }
 
-task GnarlyGenotyper {
 
-  input {
-    File workspace_tar
-    File interval
-    String output_vcf_filename
-    File ref_fasta
-    File ref_fasta_index
-    File ref_dict
-    String dbsnp_vcf
-
-  }
-
-  parameter_meta {
-    interval: {
-      localization_optional: true
-    }
-  }
-
-
-  command <<<
-    set -e
-
-    tar -xf ~{workspace_tar}
-    WORKSPACE=$( basename ~{workspace_tar} .tar)
-
-    gatk --java-options -Xms8g \
-      GnarlyGenotyper \
-      -R ~{ref_fasta} \
-      -O ~{output_vcf_filename} \
-      --output-database-name annotationDB.vcf.gz \
-      -D ~{dbsnp_vcf} \
-      --only-output-calls-starting-in-intervals \
-      -V gendb://$WORKSPACE \
-      -L ~{interval} \
-      -stand-call-conf 10 \
-      --merge-input-intervals
-  >>>
-
-  runtime {
-    memory: "26 GiB"
-    cpu: 2
-  }
-
-  output {
-    File output_vcf = "~{output_vcf_filename}"
-    File output_vcf_index = "~{output_vcf_filename}.tbi"
-    File output_database = "annotationDB.vcf.gz"
-    File output_database_index = "annotationDB.vcf.gz.tbi"
-  }
-}
-
-task HardFilterAndMakeSitesOnlyVcf {
+task HardFilterAndMakeSitesOnlyVcf {  #keep
 
   input {
     File vcf
@@ -262,7 +210,7 @@ task HardFilterAndMakeSitesOnlyVcf {
   }
 }
 
-task IndelsVariantRecalibrator {
+task IndelsVariantRecalibrator {  #keep
 
   input {
     String recalibration_filename
@@ -316,7 +264,7 @@ task IndelsVariantRecalibrator {
   }
 }
 
-task SNPsVariantRecalibratorCreateModel {
+task SNPsVariantRecalibratorCreateModel { #keep
 
   input {
     String recalibration_filename
@@ -375,7 +323,7 @@ task SNPsVariantRecalibratorCreateModel {
   }
 }
 
-task SNPsVariantRecalibrator {
+task SNPsVariantRecalibrator { #keep
 
   input {
     String recalibration_filename
@@ -450,7 +398,7 @@ task SNPsVariantRecalibrator {
   }
 }
 
-task GatherTranches {
+task GatherTranches { #keep
 
   input {
     Array[File] tranches
@@ -508,7 +456,7 @@ task GatherTranches {
   }
 }
 
-task ApplyRecalibration {
+task ApplyRecalibration {  #keep
 
   input {
     String recalibrated_vcf_filename
@@ -562,7 +510,7 @@ task ApplyRecalibration {
   }
 }
 
-task GatherVcfs {
+task GatherVcfs { #keep
 
   input {
     Array[File] input_vcfs
@@ -602,49 +550,7 @@ task GatherVcfs {
   }
 }
 
-task SelectFingerprintSiteVariants {
-
-  input {
-    File input_vcf
-    File haplotype_database
-    String base_output_name
-  }
-
-  parameter_meta {
-    input_vcf: {
-      localization_optional: true
-    }
-  }
-
-  command <<<
-    set -euo pipefail
-
-    function hdb_to_interval_list() {
-      input=$1
-      awk 'BEGIN{IFS="\t";OFS="\t";} $0~"^@"{print;next;} $0~"#CHROM"{next;} {print $1,$2,$2,"+","interval-"NR}' $1
-    }
-
-    hdb_to_interval_list ~{haplotype_database} > hdb.interval_list
-
-    gatk --java-options -Xms6g \
-      SelectVariants \
-      --variant ~{input_vcf} \
-      --intervals hdb.interval_list \
-      --output ~{base_output_name}.vcf.gz
-  >>>
-
-  runtime {
-    memory: "7.5 GiB"
-    cpu: 1
-  }
-
-  output {
-    File output_vcf = "~{base_output_name}.vcf.gz"
-    File output_vcf_index = "~{base_output_name}.vcf.gz.tbi"
-  }
-}
-
-task CollectVariantCallingMetrics {
+task CollectVariantCallingMetrics {  #keep
 
   input {
     File input_vcf
@@ -680,7 +586,7 @@ task CollectVariantCallingMetrics {
   }
 }
 
-task GatherVariantCallingMetrics {
+task GatherVariantCallingMetrics { #keep
 
   input {
     Array[File] input_details
@@ -749,216 +655,5 @@ task GatherVariantCallingMetrics {
   output {
     File detail_metrics_file = "~{output_prefix}.variant_calling_detail_metrics"
     File summary_metrics_file = "~{output_prefix}.variant_calling_summary_metrics"
-  }
-}
-
-task CrossCheckFingerprint {
-
-  input {
-    Array[File] gvcf_paths
-    Array[File] vcf_paths
-    File sample_name_map
-    File haplotype_database
-    String output_base_name
-    Boolean scattered = false
-    Array[String] expected_inconclusive_samples = []
-  }
-
-  parameter_meta {
-    gvcf_paths: {
-      localization_optional: true
-    }
-    vcf_paths: {
-      localization_optional: true
-    }
-  }
-
-  Int num_gvcfs = length(gvcf_paths)
-  Int cpu = if num_gvcfs < 32 then num_gvcfs else 32
-  # Compute memory to use based on the CPU count, following the pattern of
-  # 3.75GiB / cpu used by GCP's pricing: https://cloud.google.com/compute/pricing
-  Int memMb = round(cpu * 3.75 * 1024)
-
-  String output_name = output_base_name + ".fingerprintcheck"
-
-  command <<<
-    set -eu
-
-    gvcfInputsList=~{write_lines(gvcf_paths)}
-    vcfInputsList=~{write_lines(vcf_paths)}
-
-    cp $gvcfInputsList gvcf_inputs.list
-    cp $vcfInputsList vcf_inputs.list
-
-    gatk --java-options -Xms~{memMb - 512}m \
-      CrosscheckFingerprints \
-      --INPUT gvcf_inputs.list \
-      --SECOND_INPUT vcf_inputs.list \
-      --HAPLOTYPE_MAP ~{haplotype_database} \
-      --INPUT_SAMPLE_FILE_MAP ~{sample_name_map} \
-      --CROSSCHECK_BY SAMPLE \
-      --CROSSCHECK_MODE CHECK_SAME_SAMPLE \
-      --NUM_THREADS ~{cpu} \
-      ~{true='--EXIT_CODE_WHEN_MISMATCH 0' false='' scattered} \
-      --OUTPUT ~{output_name}
-
-    if ~{scattered}; then
-      # UNEXPECTED_MATCH is not possible with CHECK_SAME_SAMPLE
-      matches=$(grep "EXPECTED_MATCH" ~{output_name} | wc -l)
-
-      # check inconclusive samples
-      expectedInconclusiveSamples=("~{sep='" "' expected_inconclusive_samples}")
-      inconclusiveSamplesCount=0
-      inconclusiveSamples=($(grep 'INCONCLUSIVE' ~{output_name} | cut -f 1))
-      for sample in ${inconclusiveSamples[@]}; do
-      if printf '%s\n' ${expectedInconclusiveSamples[@]} | grep -P '^'${sample}'$'; then
-        inconclusiveSamplesCount=$((inconclusiveSamplesCount+1))
-      fi
-      done
-
-      total_matches=$((inconclusiveSamplesCount + matches))
-      if [[ ${total_matches} -eq ~{num_gvcfs} ]]; then
-        >&2 echo "Found the correct number of matches (~{num_gvcfs}) for this shard"
-      else
-        >&2 echo "ERROR: Found $total_matches 'EXPECTED_MATCH' records, but expected ~{num_gvcfs}"
-      exit 1
-      fi
-    fi
-  >>>
-
-  runtime {
-    memory: memMb + " MiB"
-  }
-
-  output {
-    File crosscheck_metrics = output_name
-  }
-}
-
-task GatherPicardMetrics {
-
-  input {
-    Array[File] metrics_files
-    String output_file_name
-  }
-
-  command {
-    # Don't use this task to gather tens of thousands of files.
-    # Cromwell can't handle it.
-
-    # This cannot gather metrics with histograms
-
-    head -n 7 ~{metrics_files[0]} > ~{output_file_name}
-
-    for metrics_file in ~{sep=' ' metrics_files}; do
-      sed -n '1,7d;p' $metrics_file | grep -v '^$' >> ~{output_file_name}
-    done
-  }
-
-  output {
-    File gathered_metrics = "~{output_file_name}"
-  }
-
-  runtime {
-    cpu: 1
-    memory: "3.75 GiB"
-  }
-}
-
-task GetFingerprintingIntervalIndices {
-
-  input {
-    Array[File] unpadded_intervals
-    File haplotype_database
-  }
-
-  command <<<
-    set -xeo pipefail
-
-    function rename_intervals(){
-      interval_list=$1
-      name=$2
-
-      awk 'BEGIN{FS=IFS="\t";OFS="\t";} $0~"^@"{print;next;} $0~"#CHROM"{next;} {$5="'$name'"; print}' $interval_list
-    }
-    export -f rename_intervals
-
-    function hdb_to_interval_list(){
-      input=$1
-
-      awk 'BEGIN{IFS="\t";OFS="\t";} $0~"^@"{print;next;} $0~"#CHROM"{next;} {print $1,$2,$2,"+","interval-"NR}' $1
-    }
-
-    function rename_scatter(){
-      file=$1
-      number=$(echo $file | sed -E 's|([0-9]+)-scattered\.interval.*|\1|')
-      rename_intervals $file $number > scattered.renamed.$number.interval_list
-    }
-    export -f rename_scatter
-
-    # rename the intervals within each interval_list according to the number in the name of the list
-
-    cp ~{sep=' ' unpadded_intervals} ./
-
-    cat ~{write_lines(unpadded_intervals)} | xargs -n1 basename | xargs -I{} bash -c 'rename_scatter $@' _ {}
-
-    #find the first header
-    find . -name "scattered.renamed.*.interval_list" | head -n1 | xargs cat | grep '^@' > all.interval_list
-
-    # concatenate the resulting intervals (with no header)
-    find . -name "scattered.renamed.*.interval_list"  | xargs cat | grep -v '^@' >> all.interval_list
-
-    # convert the Haplotype_database to an interval_list
-    hdb_to_interval_list ~{haplotype_database} > hdb.interval_list
-
-    # find the intervals that overlap the haplotype_database
-    gatk IntervalListTools \
-      -ACTION OVERLAPS \
-      -O all.sorted.interval_list \
-      -I all.interval_list \
-      -SI hdb.interval_list
-
-    if grep -v '^@' all.sorted.interval_list; then
-      grep -v '^@' all.sorted.interval_list | awk '{FS="\t"; print $5}' | uniq > indices.out
-    else
-      touch indices.out
-    fi
-  >>>
-
-  output {
-    Array[String] indices_to_fingerprint = read_lines("indices.out")
-    File all_sorted_interval_list = "all.sorted.interval_list"
-    File all_interval_list = "all.interval_list"
-    File hdb_interval_list = "hdb.interval_list"
-  }
-
-  runtime {
-    cpu: 2
-    memory: "3.75 GiB"
-  }
-}
-
-task PartitionSampleNameMap {
-
-  input {
-    File sample_name_map
-    Int line_limit
-  }
-
-  command {
-
-    cut -f 2 ~{sample_name_map} > sample_paths
-    split -l ~{line_limit} -d sample_paths partition_
-
-    # Let the OS catch up with creation of files for glob command
-    sleep 1
-  }
-
-  output {
-    Array[File] partitions = glob("partition_*")
-  }
-
-  runtime {
-    memory: "1 GiB"
   }
 }

@@ -24,8 +24,6 @@ workflow JointGenotyping {
     Array[String] indel_recalibration_tranche_values
     Array[String] indel_recalibration_annotation_values
 
-    File haplotype_database
-
     File eval_interval_list
     File hapmap_resource_vcf
     File hapmap_resource_vcf_index
@@ -52,8 +50,6 @@ workflow JointGenotyping {
     Int snps_variant_recalibration_threshold = 500000
     Float unbounded_scatter_count_scale_factor = 0.15
     Boolean use_allele_specific_annotations = true
-    Boolean cross_check_fingerprints = true
-    Boolean scatter_cross_check_fingerprints = false
   }
 
   Array[Array[String]] sample_name_map_lines = read_tsv(sample_name_map)
@@ -73,7 +69,7 @@ workflow JointGenotyping {
   Int unbounded_scatter_count = select_first([top_level_scatter_count, round(unbounded_scatter_count_scale_factor * num_gvcfs)])
   Int scatter_count = if unbounded_scatter_count > 2 then unbounded_scatter_count else 2 #I think weird things happen if scatterCount is 1 -- IntervalListTools is noop?
 
-  call Tasks.CheckSamplesUnique {
+  call Tasks.CheckSamplesUnique  as CheckSamplesUnique {
     input:
       sample_name_map = sample_name_map
   }
@@ -95,19 +91,16 @@ workflow JointGenotyping {
     # is the optimal value for the amount of memory allocated
     # within the task; please do not change it without consulting
     # the Hellbender (GATK engine) team!
-    call Tasks.ImportGVCFs {
+    call Tasks.ImportGVCFs as ImportGVCFs {
       input:
         sample_name_map = sample_name_map,
         interval = unpadded_intervals[idx],
-        ref_fasta = ref_fasta,
-        ref_fasta_index = ref_fasta_index,
-        ref_dict = ref_dict,
         workspace_dir_name = "genomicsdb",
         batch_size = 50
     }
 
 
-    call Tasks.GenotypeGVCFs {
+    call Tasks.GenotypeGVCFs as GenotypeGVCFs{
       input:
         workspace_tar = ImportGVCFs.output_genomicsdb,
         interval = unpadded_intervals[idx],
@@ -115,7 +108,7 @@ workflow JointGenotyping {
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
         ref_dict = ref_dict,
-        dbsnp_vcf = dbsnp_vcf,
+        dbsnp_vcf = dbsnp_vcf
     }
 
     File genotyped_vcf =  GenotypeGVCFs.output_vcf
