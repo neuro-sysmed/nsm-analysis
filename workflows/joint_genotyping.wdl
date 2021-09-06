@@ -1,6 +1,6 @@
 version 1.0
 
-import "tasks/JointGenotypingTasks.wdl" as Tasks
+import "../tasks/JointGenotypingTasks.wdl" as Tasks
 
 
 workflow JointGenotyping {
@@ -118,8 +118,8 @@ workflow JointGenotyping {
         dbsnp_vcf = dbsnp_vcf,
     }
 
-    File genotyped_vcf = select_first([TotallyRadicalGatherVcfs.output_vcf, GenotypeGVCFs.output_vcf])
-    File genotyped_vcf_index = select_first([TotallyRadicalGatherVcfs.output_vcf_index, GenotypeGVCFs.output_vcf_index])
+    File genotyped_vcf =  GenotypeGVCFs.output_vcf
+    File genotyped_vcf_index = GenotypeGVCFs.output_vcf_index
 
     call Tasks.HardFilterAndMakeSitesOnlyVcf {
       input:
@@ -310,7 +310,6 @@ workflow JointGenotyping {
     Array[File] output_intervals = SplitIntervalList.output_intervals
 
     # Output the metrics from crosschecking fingerprints.
-    File crosscheck_fingerprint_check = select_first([CrossCheckFingerprintSolo.crosscheck_metrics, GatherFingerprintingMetrics.gathered_metrics])
   }
   meta {
     allowNestedInputs: true

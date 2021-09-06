@@ -29,9 +29,6 @@ task CheckSamplesUnique {
 
   runtime {
     memory: "1 GiB"
-    preemptible: 1
-    disks: "local-disk 10 HDD"
-    docker: "us.gcr.io/broad-gotc-prod/python:2.7"
   }
 }
 
@@ -43,10 +40,7 @@ task SplitIntervalList {
     File ref_fasta
     File ref_fasta_index
     File ref_dict
-    Boolean sample_names_unique_done
-    Int disk_size
     String scatter_mode = "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -63,10 +57,6 @@ task SplitIntervalList {
 
   runtime {
     memory: "3.75 GiB"
-    preemptible: 1
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    docker: gatk_docker
   }
 
   output {
@@ -79,16 +69,13 @@ task ImportGVCFs {
   input {
     File sample_name_map
     File interval
-    File ref_fasta
     File ref_fasta_index
     File ref_dict
 
     String workspace_dir_name
 
-    Int disk_size
     Int batch_size
 
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -121,10 +108,6 @@ task ImportGVCFs {
   runtime {
     memory: "26 GiB"
     cpu: 4
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    docker: gatk_docker
-    preemptible: 1
   }
 
   output {
@@ -146,10 +129,8 @@ task GenotypeGVCFs {
 
     String dbsnp_vcf
 
-    Int disk_size
     # This is needed for gVCFs generated with GATK3 HaplotypeCaller
     Boolean allow_old_rms_mapping_quality_annotation_data = false
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -180,10 +161,6 @@ task GenotypeGVCFs {
   runtime {
     memory: "26 GiB"
     cpu: 2
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -203,7 +180,6 @@ task GnarlyGenotyper {
     File ref_dict
     String dbsnp_vcf
 
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -212,7 +188,6 @@ task GnarlyGenotyper {
     }
   }
 
-  Int disk_size = ceil(size(workspace_tar, "GiB") + size(ref_fasta, "GiB") + size(dbsnp_vcf, "GiB") * 3)
 
   command <<<
     set -e
@@ -236,10 +211,6 @@ task GnarlyGenotyper {
   runtime {
     memory: "26 GiB"
     cpu: 2
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -260,8 +231,6 @@ task HardFilterAndMakeSitesOnlyVcf {
     String variant_filtered_vcf_filename
     String sites_only_vcf_filename
 
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -283,10 +252,6 @@ task HardFilterAndMakeSitesOnlyVcf {
   runtime {
     memory: "3.75 GiB"
     cpu: "1"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -318,8 +283,6 @@ task IndelsVariantRecalibrator {
     Boolean use_allele_specific_annotations
     Int max_gaussians = 4
 
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -344,10 +307,6 @@ task IndelsVariantRecalibrator {
   runtime {
     memory: "26 GiB"
     cpu: "2"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -382,8 +341,6 @@ task SNPsVariantRecalibratorCreateModel {
     Boolean use_allele_specific_annotations
     Int max_gaussians = 6
 
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -411,10 +368,6 @@ task SNPsVariantRecalibratorCreateModel {
   runtime {
     memory: "104 GiB"
     cpu: "2"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -446,8 +399,6 @@ task SNPsVariantRecalibrator {
     Boolean use_allele_specific_annotations
     Int max_gaussians = 6
 
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
     Int? machine_mem_gb
 
   }
@@ -490,10 +441,6 @@ task SNPsVariantRecalibrator {
   runtime {
     memory: "~{machine_mem} GiB"
     cpu: 2
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -509,8 +456,6 @@ task GatherTranches {
     Array[File] tranches
     String output_filename
     String mode
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -556,10 +501,6 @@ task GatherTranches {
   runtime {
     memory: "7.5 GiB"
     cpu: "2"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -582,8 +523,6 @@ task ApplyRecalibration {
     Float indel_filter_level
     Float snp_filter_level
     Boolean use_allele_specific_annotations
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -615,10 +554,6 @@ task ApplyRecalibration {
   runtime {
     memory: "7 GiB"
     cpu: "1"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -632,8 +567,6 @@ task GatherVcfs {
   input {
     Array[File] input_vcfs
     String output_vcf_name
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -661,10 +594,6 @@ task GatherVcfs {
   runtime {
     memory: "7 GiB"
     cpu: "1"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -679,8 +608,6 @@ task SelectFingerprintSiteVariants {
     File input_vcf
     File haplotype_database
     String base_output_name
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -709,10 +636,6 @@ task SelectFingerprintSiteVariants {
   runtime {
     memory: "7.5 GiB"
     cpu: 1
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -731,8 +654,6 @@ task CollectVariantCallingMetrics {
     File dbsnp_vcf_index
     File interval_list
     File ref_dict
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -756,10 +677,6 @@ task CollectVariantCallingMetrics {
   runtime {
     memory: "7.5 GiB"
     cpu: 2
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 }
 
@@ -769,8 +686,6 @@ task GatherVariantCallingMetrics {
     Array[File] input_details
     Array[File] input_summaries
     String output_prefix
-    Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -829,10 +744,6 @@ task GatherVariantCallingMetrics {
   runtime {
     memory: "3 GiB"
     cpu: "1"
-    bootDiskSizeGb: 15
-    disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
-    docker: gatk_docker
   }
 
   output {
@@ -851,7 +762,6 @@ task CrossCheckFingerprint {
     String output_base_name
     Boolean scattered = false
     Array[String] expected_inconclusive_samples = []
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   parameter_meta {
@@ -868,7 +778,6 @@ task CrossCheckFingerprint {
   # Compute memory to use based on the CPU count, following the pattern of
   # 3.75GiB / cpu used by GCP's pricing: https://cloud.google.com/compute/pricing
   Int memMb = round(cpu * 3.75 * 1024)
-  Int disk = 100
 
   String output_name = output_base_name + ".fingerprintcheck"
 
@@ -919,9 +828,6 @@ task CrossCheckFingerprint {
 
   runtime {
     memory: memMb + " MiB"
-    disks: "local-disk " + disk + " HDD"
-    preemptible: 0
-    docker: gatk_docker
   }
 
   output {
@@ -934,7 +840,6 @@ task GatherPicardMetrics {
   input {
     Array[File] metrics_files
     String output_file_name
-    Int disk_size
   }
 
   command {
@@ -957,9 +862,6 @@ task GatherPicardMetrics {
   runtime {
     cpu: 1
     memory: "3.75 GiB"
-    preemptible: 1
-    disks: "local-disk " + disk_size + " HDD"
-    docker: "us.gcr.io/broad-gotc-prod/python:2.7"
   }
 }
 
@@ -968,7 +870,6 @@ task GetFingerprintingIntervalIndices {
   input {
     Array[File] unpadded_intervals
     File haplotype_database
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
   }
 
   command <<<
@@ -1034,10 +935,6 @@ task GetFingerprintingIntervalIndices {
   runtime {
     cpu: 2
     memory: "3.75 GiB"
-    preemptible: 1
-    bootDiskSizeGb: 15
-    disks: "local-disk 10 HDD"
-    docker: gatk_docker
   }
 }
 
@@ -1063,8 +960,5 @@ task PartitionSampleNameMap {
 
   runtime {
     memory: "1 GiB"
-    preemptible: 1
-    disks: "local-disk 10 HDD"
-    docker: "us.gcr.io/broad-gotc-prod/python:2.7"
   }
 }
