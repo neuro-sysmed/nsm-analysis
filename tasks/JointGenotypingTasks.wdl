@@ -15,9 +15,10 @@ task CheckSamplesUnique { #keep
       exit 1
     elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt ~{sample_num_threshold} ]]
     then
-      echo "There are fewer than ~{sample_num_threshold} samples in the sample_name_map" 1>&2
-      echo "Having fewer than ~{sample_num_threshold} samples means there likely isn't enough data to complete joint calling" 1>&2
-      exit 1
+      echo true
+      #echo "There are fewer than ~{sample_num_threshold} samples in the sample_name_map" 1>&2
+      #echo "Having fewer than ~{sample_num_threshold} samples means there likely isn't enough data to complete joint calling" 1>&2
+      #exit 0
     else
       echo true
     fi
@@ -50,11 +51,11 @@ task SplitIntervalList { #keep
     }
   }
 
-  command <<<
+  command {
     gatk --java-options -Xms3g SplitIntervals \
       -L ~{interval_list} -O  scatterDir -scatter ~{scatter_count} -R ~{ref_fasta} \
       -mode ~{scatter_mode} --interval-merging-rule OVERLAPPING_ONLY
-    >>>
+  }
 
   runtime {
     memory: "3.75 GiB"
@@ -77,7 +78,7 @@ task ImportGVCFs { #keep
 
   }
 
-  command <<<
+  command {
     set -euo pipefail
 
     rm -rf ~{workspace_dir_name}
@@ -102,7 +103,7 @@ task ImportGVCFs { #keep
       --consolidate
 
     tar -cf ~{workspace_dir_name}.tar ~{workspace_dir_name}
-  >>>
+  }
 
   runtime {
     memory: "26 GiB"
