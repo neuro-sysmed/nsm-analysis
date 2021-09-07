@@ -15,17 +15,8 @@ workflow VariantCalling {
       DNASeqSingleSampleReferences references
       VariantCallingScatterSettings scatter_settings
 
-#    File calling_interval_list
-#    File evaluation_interval_list
-    Float? contamination
     File input_bam
     File input_bam_index
-#    ReferenceFasta references
-#    File ref_fasta
-#    File ref_fasta_index
-#    File ref_dict
-#    File dbsnp_vcf
-#    File dbsnp_vcf_index
     String sample_name
     Boolean make_gvcf = true
    }
@@ -52,7 +43,6 @@ workflow VariantCalling {
       # Generate GVCF by interval
       call BamUtils.HaplotypeCaller as HaplotypeCaller {
         input:
-          contamination = contamination,
           input_bam = input_bam,
           input_bam_index = input_bam_index,
           interval_list = scattered_interval_list,
@@ -140,15 +130,7 @@ workflow VariantCalling {
     File output_vcf           = GenotypeGVCF.output_vcf
     File output_vcf_index     = GenotypeGVCF.output_vcf_index
   }
-      
-
-
-
-#   output {
-#    Array[File] bams = glob("output_dir/*.bam")
-#      File output_bam = BwaMem.output_aligned_bam
-#   }
-
+  
   meta {
     allowNestedInputs: true
   }

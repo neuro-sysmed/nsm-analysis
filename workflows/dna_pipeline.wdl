@@ -9,7 +9,9 @@ import "../tasks/QC.wdl" as QC
 import "../tasks/BamUtils.wdl" as BamUtils
 import "../tasks/Versions.wdl" as Versions
 import "../tasks/AggregatedBamQC.wdl" as AggregatedBamQC
+
 import "../workflows/haplotype_caller.wdl" as HaplotypeCaller
+
 import "../structs/DNASeqStructs.wdl" as Structs
 
 
