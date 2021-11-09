@@ -1,22 +1,20 @@
 version 1.0
 
+import "../structs/DNASeqStructs.wdl" 
 import "../tasks/JointGenotypingTasks.wdl" as Tasks
 
 
 workflow JointGenotyping {
 
   input {
-    File unpadded_intervals_file
+
+
 
     String callset_name
     File sample_name_map
+    
+    DNASeqSingleSampleReferences references
 
-    File ref_fasta
-    File ref_fasta_index
-    File ref_dict
-
-    File dbsnp_vcf
-    File dbsnp_vcf_index
 
 
     Array[String] snp_recalibration_tranche_values
@@ -24,19 +22,16 @@ workflow JointGenotyping {
     Array[String] indel_recalibration_tranche_values
     Array[String] indel_recalibration_annotation_values
 
-    File eval_interval_list
-    File hapmap_resource_vcf
-    File hapmap_resource_vcf_index
-    File omni_resource_vcf
-    File omni_resource_vcf_index
-    File one_thousand_genomes_resource_vcf
-    File one_thousand_genomes_resource_vcf_index
-    File mills_resource_vcf
-    File mills_resource_vcf_index
-    File axiomPoly_resource_vcf
-    File axiomPoly_resource_vcf_index
-    File dbsnp_resource_vcf = dbsnp_vcf
-    File dbsnp_resource_vcf_index = dbsnp_vcf_index
+#    File hapmap_resource_vcf
+#    File hapmap_resource_vcf_index
+#    File omni_resource_vcf
+#    File omni_resource_vcf_index
+#    File one_thousand_genomes_resource_vcf
+#    File one_thousand_genomes_resource_vcf_index
+#    File mills_resource_vcf
+#    File mills_resource_vcf_index
+#    File axiomPoly_resource_vcf
+#    File axiomPoly_resource_vcf_index
 
     # ExcessHet is a phred-scaled p-value. We want a cutoff of anything more extreme
     # than a z-score of -4.5 which is a p-value of 3.4e-06, which phred-scaled is 54.69
@@ -76,11 +71,11 @@ workflow JointGenotyping {
 
   call Tasks.SplitIntervalList {
     input:
-      interval_list = unpadded_intervals_file,
+      interval_list = references.unpadded_intervals_file,
       scatter_count = scatter_count,
-      ref_fasta = ref_fasta,
-      ref_fasta_index = ref_fasta_index,
-      ref_dict = ref_dict,
+      ref_fasta = references.reference_fasta.ref_fasta,
+      ref_fasta_index = references.reference_fasta.ref_fasta_index,
+      ref_dict = references.reference_fasta.ref_dict,
       sample_names_unique_done = CheckSamplesUnique.samples_unique
   }
 
@@ -105,11 +100,11 @@ workflow JointGenotyping {
         workspace_tar = ImportGVCFs.output_genomicsdb,
         interval = unpadded_intervals[idx],
         output_vcf_filename = callset_name + "." + idx + ".vcf.gz",
-        ref_fasta = ref_fasta,
-        ref_fasta_index = ref_fasta_index,
-        ref_dict = ref_dict,
-        dbsnp_vcf = dbsnp_vcf,
-        dbsnp_vcf_index = dbsnp_resource_vcf_index
+        ref_fasta = references.reference_fasta.ref_fasta,
+        ref_fasta_index = references.reference_fasta.ref_fasta_index,
+        ref_dict = references.reference_fasta.ref_dict,
+        dbsnp_vcf = references.dbsnp_vcf,
+        dbsnp_vcf_index = references.dbsnp_vcf_index
     }
 
     File genotyped_vcf =  GenotypeGVCFs.output_vcf
@@ -139,12 +134,12 @@ workflow JointGenotyping {
       tranches_filename = callset_name + ".indels.tranches",
       recalibration_tranche_values = indel_recalibration_tranche_values,
       recalibration_annotation_values = indel_recalibration_annotation_values,
-      mills_resource_vcf = mills_resource_vcf,
-      mills_resource_vcf_index = mills_resource_vcf_index,
-      axiomPoly_resource_vcf = axiomPoly_resource_vcf,
-      axiomPoly_resource_vcf_index = axiomPoly_resource_vcf_index,
-      dbsnp_resource_vcf = dbsnp_resource_vcf,
-      dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
+      mills_resource_vcf = references.mills_resource_vcf,
+      mills_resource_vcf_index = references.mills_resource_vcf_index,
+      axiomPoly_resource_vcf = references.axiomPoly_resource_vcf,
+      axiomPoly_resource_vcf_index = references.axiomPoly_resource_vcf_index,
+      dbsnp_resource_vcf = references.dbsnp_vcf,
+      dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
       use_allele_specific_annotations = use_allele_specific_annotations,
   }
 
@@ -159,14 +154,14 @@ workflow JointGenotyping {
         recalibration_annotation_values = snp_recalibration_annotation_values,
         downsampleFactor = SNP_VQSR_downsampleFactor,
         model_report_filename = callset_name + ".snps.model.report",
-        hapmap_resource_vcf = hapmap_resource_vcf,
-        hapmap_resource_vcf_index = hapmap_resource_vcf_index,
-        omni_resource_vcf = omni_resource_vcf,
-        omni_resource_vcf_index = omni_resource_vcf_index,
-        one_thousand_genomes_resource_vcf = one_thousand_genomes_resource_vcf,
-        one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
-        dbsnp_resource_vcf = dbsnp_resource_vcf,
-        dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
+        hapmap_resource_vcf = references.hapmap_resource_vcf,
+        hapmap_resource_vcf_index = references.hapmap_resource_vcf_index,
+        omni_resource_vcf = references.omni_resource_vcf,
+        omni_resource_vcf_index = references.omni_resource_vcf_index,
+        one_thousand_genomes_resource_vcf = references.one_thousand_genomes_resource_vcf,
+        one_thousand_genomes_resource_vcf_index = references.one_thousand_genomes_resource_vcf_index,
+        dbsnp_resource_vcf = references.dbsnp_vcf,
+        dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
         use_allele_specific_annotations = use_allele_specific_annotations,
     }
 
@@ -180,14 +175,14 @@ workflow JointGenotyping {
           recalibration_tranche_values = snp_recalibration_tranche_values,
           recalibration_annotation_values = snp_recalibration_annotation_values,
           model_report = SNPsVariantRecalibratorCreateModel.model_report,
-          hapmap_resource_vcf = hapmap_resource_vcf,
-          hapmap_resource_vcf_index = hapmap_resource_vcf_index,
-          omni_resource_vcf = omni_resource_vcf,
-          omni_resource_vcf_index = omni_resource_vcf_index,
-          one_thousand_genomes_resource_vcf = one_thousand_genomes_resource_vcf,
-          one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
-          dbsnp_resource_vcf = dbsnp_resource_vcf,
-          dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
+          hapmap_resource_vcf = references.hapmap_resource_vcf,
+          hapmap_resource_vcf_index = references.hapmap_resource_vcf_index,
+          omni_resource_vcf = references.omni_resource_vcf,
+          omni_resource_vcf_index = references.omni_resource_vcf_index,
+          one_thousand_genomes_resource_vcf = references.one_thousand_genomes_resource_vcf,
+          one_thousand_genomes_resource_vcf_index = references.one_thousand_genomes_resource_vcf_index,
+          dbsnp_resource_vcf = references.dbsnp_vcf,
+          dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
           use_allele_specific_annotations = use_allele_specific_annotations,
         }
     }
@@ -209,14 +204,14 @@ workflow JointGenotyping {
         tranches_filename = callset_name + ".snps.tranches",
         recalibration_tranche_values = snp_recalibration_tranche_values,
         recalibration_annotation_values = snp_recalibration_annotation_values,
-        hapmap_resource_vcf = hapmap_resource_vcf,
-        hapmap_resource_vcf_index = hapmap_resource_vcf_index,
-        omni_resource_vcf = omni_resource_vcf,
-        omni_resource_vcf_index = omni_resource_vcf_index,
-        one_thousand_genomes_resource_vcf = one_thousand_genomes_resource_vcf,
-        one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
-        dbsnp_resource_vcf = dbsnp_resource_vcf,
-        dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
+        hapmap_resource_vcf = references.hapmap_resource_vcf,
+        hapmap_resource_vcf_index = references.hapmap_resource_vcf_index,
+        omni_resource_vcf = references.omni_resource_vcf,
+        omni_resource_vcf_index = references.omni_resource_vcf_index,
+        one_thousand_genomes_resource_vcf = references.one_thousand_genomes_resource_vcf,
+        one_thousand_genomes_resource_vcf_index = references.one_thousand_genomes_resource_vcf_index,
+        dbsnp_resource_vcf = references.dbsnp_vcf,
+        dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
         use_allele_specific_annotations = use_allele_specific_annotations,
     }
   }
@@ -246,10 +241,10 @@ workflow JointGenotyping {
           input_vcf = ApplyRecalibration.recalibrated_vcf,
           input_vcf_index = ApplyRecalibration.recalibrated_vcf_index,
           metrics_filename_prefix = callset_name + "." + idx,
-          dbsnp_vcf = dbsnp_vcf,
-          dbsnp_vcf_index = dbsnp_vcf_index,
-          interval_list = eval_interval_list,
-          ref_dict = ref_dict,
+          dbsnp_vcf = references.dbsnp_vcf,
+          dbsnp_vcf_index = references.dbsnp_vcf_index,
+          interval_list = references.evaluation_interval_list,
+          ref_dict = references.reference_fasta.ref_dict,
       }
     }
   }
@@ -267,10 +262,10 @@ workflow JointGenotyping {
         input_vcf = FinalGatherVcf.output_vcf,
         input_vcf_index = FinalGatherVcf.output_vcf_index,
         metrics_filename_prefix = callset_name,
-        dbsnp_vcf = dbsnp_vcf,
-        dbsnp_vcf_index = dbsnp_vcf_index,
-        interval_list = eval_interval_list,
-        ref_dict = ref_dict,
+        dbsnp_vcf = references.dbsnp_vcf,
+        dbsnp_vcf_index = references.dbsnp_vcf_index,
+        interval_list = references.evaluation_interval_list,
+        ref_dict = references.reference_fasta.ref_dict,
     }
   }
 

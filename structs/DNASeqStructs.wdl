@@ -36,6 +36,20 @@ struct DNASeqSingleSampleReferences {
   File evaluation_interval_list
 
   File haplotype_database_file
+
+
+  File hapmap_resource_vcf
+  File hapmap_resource_vcf_index
+  File omni_resource_vcf
+  File omni_resource_vcf_index
+  File one_thousand_genomes_resource_vcf
+  File one_thousand_genomes_resource_vcf_index
+  File mills_resource_vcf
+  File mills_resource_vcf_index
+  File axiomPoly_resource_vcf
+  File axiomPoly_resource_vcf_index
+  File unpadded_intervals_file
+
 }
 
 struct SampleFQ {
