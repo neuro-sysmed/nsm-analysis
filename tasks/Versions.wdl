@@ -339,7 +339,7 @@ task Bcftools {
 
 task Bedtools {
     input {
-        String bedtools_cmd = '/usr/local/bin/bedtools'
+        String bedtools_cmd = 'bedtools'
         String? bedtools_module
     }
 
