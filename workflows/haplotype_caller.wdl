@@ -20,7 +20,7 @@ workflow VariantCalling {
       String sample_name
       Boolean make_gvcf = true
 
-      String? samtools_module
+
       String? picard_module
       String? gatk_module
 

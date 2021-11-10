@@ -261,7 +261,8 @@ workflow DNAProcessing {
          input_bam = aligned_bam,
          input_bam_index = aligned_bam_index,
          sample_name = sample_name,
-         gatk_module = gatk_module
+         gatk_module = gatk_module,
+         picard_module = picard_module
    }
 
 
