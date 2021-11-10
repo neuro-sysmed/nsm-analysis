@@ -1,17 +1,73 @@
 version 1.0
 
 workflow Versions {
-    call Bwa as Bwa
-    call Samtools as Samtools
-    call Picard as Picard
-    call Gatk as Gatk
-    call Bcftools as Bcftools
-    call Bedtools as Bedtools
-    call Star as Star
-    call Package as Package
+   input {
+      String? image
+      String? version_file
+      String? bcftools_module
+      String? bedtools_module
+      String? gatk_module
+      String? picard_module
+      String? salmon_module
+      String? samtools_module
+      String? star_module
+      String? bwa_module
+      String? version_file
+   }
+
+
+    call Bwa as Bwa {
+        input:
+          bwa_module = bwa_module
+    }
+
+    call Samtools as Samtools {
+        input:
+          samtools_module = samtools_module
+    }
+
+    call Picard as Picard {
+        input:
+          picard_module = picard_module
+    }
+
+    call Gatk as Gatk {
+        input:
+          gatk_module = gatk_module
+    }
+
+    call Bcftools as Bcftools {
+        input:
+          bcftools_module = bcftools_module
+    }
+
+    call Bedtools as Bedtools {
+        input:
+          bedtools_module = bedtools_module
+    }
+
+    call Star as Star {
+        input:
+          star_module = star_module
+    }
+
+
+    call Salmon as Salmon {
+        input:
+          bwa_module = bwa_module
+    }
+
+    call Image as Image {
+        input:
+          image = image
+    }
+
+    call Package as Package {
+        input:
+          version_file = version_file
+    }
+
     call Singularity as Singularity
-    call Salmon as Salmon
-    call Image as Image
 
     output {
         String package  = Package.version
