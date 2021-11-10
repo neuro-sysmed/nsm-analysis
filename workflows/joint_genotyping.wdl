@@ -76,7 +76,8 @@ workflow JointGenotyping {
       ref_fasta = references.reference_fasta.ref_fasta,
       ref_fasta_index = references.reference_fasta.ref_fasta_index,
       ref_dict = references.reference_fasta.ref_dict,
-      sample_names_unique_done = CheckSamplesUnique.samples_unique
+      sample_names_unique_done = CheckSamplesUnique.samples_unique,
+      gatk_module = gatk_module,
   }
 
   Array[File] unpadded_intervals = SplitIntervalList.output_intervals
@@ -91,7 +92,8 @@ workflow JointGenotyping {
         sample_name_map = sample_name_map,
         interval = unpadded_intervals[idx],
         workspace_dir_name = "genomicsdb",
-        batch_size = 50
+        batch_size = 50,
+        gatk_module = gatk_module,
     }
 
 
@@ -104,7 +106,8 @@ workflow JointGenotyping {
         ref_fasta_index = references.reference_fasta.ref_fasta_index,
         ref_dict = references.reference_fasta.ref_dict,
         dbsnp_vcf = references.dbsnp_vcf,
-        dbsnp_vcf_index = references.dbsnp_vcf_index
+        dbsnp_vcf_index = references.dbsnp_vcf_index,
+        gatk_module = gatk_module,
     }
 
     File genotyped_vcf =  GenotypeGVCFs.output_vcf
@@ -117,6 +120,7 @@ workflow JointGenotyping {
         excess_het_threshold = excess_het_threshold,
         variant_filtered_vcf_filename = callset_name + "." + idx + ".variant_filtered.vcf.gz",
         sites_only_vcf_filename = callset_name + "." + idx + ".sites_only.variant_filtered.vcf.gz",
+        gatk_module = gatk_module,
     }
   }
 
@@ -124,6 +128,7 @@ workflow JointGenotyping {
     input:
       input_vcfs = HardFilterAndMakeSitesOnlyVcf.sites_only_vcf,
       output_vcf_name = callset_name + ".sites_only.vcf.gz",
+      gatk_module = gatk_module,
   }
 
   call Tasks.IndelsVariantRecalibrator {
@@ -141,6 +146,7 @@ workflow JointGenotyping {
       dbsnp_resource_vcf = references.dbsnp_vcf,
       dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
       use_allele_specific_annotations = use_allele_specific_annotations,
+      gatk_module = gatk_module,
   }
 
   if (num_gvcfs > snps_variant_recalibration_threshold) {
@@ -163,6 +169,7 @@ workflow JointGenotyping {
         dbsnp_resource_vcf = references.dbsnp_vcf,
         dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
         use_allele_specific_annotations = use_allele_specific_annotations,
+        gatk_module = gatk_module,
     }
 
     scatter (idx in range(length(HardFilterAndMakeSitesOnlyVcf.sites_only_vcf))) {
@@ -184,6 +191,7 @@ workflow JointGenotyping {
           dbsnp_resource_vcf = references.dbsnp_vcf,
           dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
           use_allele_specific_annotations = use_allele_specific_annotations,
+          gatk_module = gatk_module,
         }
     }
 
@@ -192,6 +200,7 @@ workflow JointGenotyping {
         tranches = SNPsVariantRecalibratorScattered.tranches,
         output_filename = callset_name + ".snps.gathered.tranches",
         mode = "SNP",
+        gatk_module = gatk_module,
     }
   }
 
@@ -213,6 +222,7 @@ workflow JointGenotyping {
         dbsnp_resource_vcf = references.dbsnp_vcf,
         dbsnp_resource_vcf_index = references.dbsnp_vcf_index,
         use_allele_specific_annotations = use_allele_specific_annotations,
+        gatk_module = gatk_module,
     }
   }
 
@@ -232,6 +242,7 @@ workflow JointGenotyping {
         indel_filter_level = indel_filter_level,
         snp_filter_level = snp_filter_level,
         use_allele_specific_annotations = use_allele_specific_annotations,
+        gatk_module = gatk_module,
     }
 
     # For large callsets we need to collect metrics from the shards and gather them later.
@@ -245,6 +256,7 @@ workflow JointGenotyping {
           dbsnp_vcf_index = references.dbsnp_vcf_index,
           interval_list = references.evaluation_interval_list,
           ref_dict = references.reference_fasta.ref_dict,
+          gatk_module = gatk_module,
       }
     }
   }
@@ -255,6 +267,7 @@ workflow JointGenotyping {
       input:
         input_vcfs = ApplyRecalibration.recalibrated_vcf,
         output_vcf_name = callset_name + ".vcf.gz",
+        gatk_module = gatk_module,
     }
 
     call Tasks.CollectVariantCallingMetrics as CollectMetricsOnFullVcf {
@@ -266,6 +279,7 @@ workflow JointGenotyping {
         dbsnp_vcf_index = references.dbsnp_vcf_index,
         interval_list = references.evaluation_interval_list,
         ref_dict = references.reference_fasta.ref_dict,
+        gatk_module = gatk_module,
     }
   }
 
@@ -276,6 +290,7 @@ workflow JointGenotyping {
         input_details = select_all(CollectMetricsSharded.detail_metrics_file),
         input_summaries = select_all(CollectMetricsSharded.summary_metrics_file),
         output_prefix = callset_name,
+        gatk_module = gatk_module,
     }
   }
   # Get the metrics from either code path

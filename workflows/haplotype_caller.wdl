@@ -15,10 +15,15 @@ workflow VariantCalling {
       DNASeqSingleSampleReferences references
       VariantCallingScatterSettings scatter_settings
 
-    File input_bam
-    File input_bam_index
-    String sample_name
-    Boolean make_gvcf = true
+      File input_bam
+      File input_bam_index
+      String sample_name
+      Boolean make_gvcf = true
+
+      String? samtools_module
+      String? picard_module
+      String? gatk_module
+
    }
 
 
@@ -28,7 +33,8 @@ workflow VariantCalling {
     input:
       interval_list = references.wgs_calling_interval_list,
       scatter_count = scatter_settings.haplotype_scatter_count,
-      break_bands_at_multiples_of = scatter_settings.break_bands_at_multiples_of
+      break_bands_at_multiples_of = scatter_settings.break_bands_at_multiples_of,
+      picard_module = picard_module,
   }
 
   # We need disk to localize the sharded input and output due to the scatter for HaplotypeCaller.
@@ -52,6 +58,7 @@ workflow VariantCalling {
           ref_fasta_index = references.reference_fasta.ref_fasta_index,
           hc_scatter = hc_divisor,
           make_gvcf = true,
+          gatk_module = gatk_module,
        }
 
     File vcfs_to_merge = select_first([HaplotypeCaller.output_vcf])
@@ -65,6 +72,7 @@ workflow VariantCalling {
       input_vcfs = vcfs_to_merge,
       input_vcfs_indexes = vcf_indices_to_merge,
       output_vcf_name = sample_name + merge_suffix,
+      picard_module = picard_module,
   }
 
   # Validate the (g)VCF output of HaplotypeCaller
@@ -79,6 +87,7 @@ workflow VariantCalling {
       ref_dict = references.reference_fasta.ref_dict,
       calling_interval_list = references.wgs_calling_interval_list,
       is_gvcf = true,
+      picard_module = picard_module,
   }
 
   call VcfUtils.GenotypeGVCF as GenotypeGVCF {
@@ -89,6 +98,7 @@ workflow VariantCalling {
       reference_fasta = references.reference_fasta.ref_fasta,
       reference_fasta_index = references.reference_fasta.ref_fasta_index,
       reference_dict = references.reference_fasta.ref_dict,
+      gatk_module = gatk_module,
   }
 
   # QC the gVCF
@@ -102,6 +112,7 @@ workflow VariantCalling {
       ref_dict = references.reference_fasta.ref_dict,
       evaluation_interval_list = references.evaluation_interval_list,
       is_gvcf = true,
+      picard_module = picard_module,
   }
 
   # QC the VCF
@@ -115,6 +126,7 @@ workflow VariantCalling {
       ref_dict = references.reference_fasta.ref_dict,
       evaluation_interval_list = references.evaluation_interval_list,
       is_gvcf = true,
+      picard_module = picard_module,
   }
 
 

@@ -13,6 +13,10 @@ workflow GenotypeGvcf {
       File gvcf_file
       File gvcf_file_index
       DNASeqSingleSampleReferences references
+
+      String? picard_module
+      String? gatk_module
+
    }
 
 
@@ -28,6 +32,7 @@ workflow GenotypeGvcf {
       ref_dict = references.reference_fasta.ref_dict,
       calling_interval_list = references.wgs_calling_interval_list,
       is_gvcf = true,
+      picard_module = picard_module,
   }
 
   call VcfUtils.GenotypeGVCF as GenotypeGVCF {
@@ -38,6 +43,7 @@ workflow GenotypeGvcf {
       reference_fasta = references.reference_fasta.ref_fasta,
       reference_fasta_index = references.reference_fasta.ref_fasta_index,
       reference_dict = references.reference_fasta.ref_dict,
+      gatk_module = gatk_module,
   }
 
   # QC the VCF
@@ -51,6 +57,7 @@ workflow GenotypeGvcf {
       ref_dict = references.reference_fasta.ref_dict,
       evaluation_interval_list = references.evaluation_interval_list,
       is_gvcf = true,
+      picard_module = picard_module,
   }
 
 

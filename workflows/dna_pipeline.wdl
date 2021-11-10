@@ -54,6 +54,7 @@ workflow DNAProcessing {
          input:
          input_bam = unmapped_bam,
          metrics_filename = bam_basename + ".quality_yield_metrics",
+         picard_module = picard_module,
       }
 
 
@@ -64,12 +65,15 @@ workflow DNAProcessing {
             reference_fasta = references.reference_fasta,
             compression_level = compression_level,
             hard_clip_reads = hard_clip_reads,      
+            picard_module = picard_module,
+            bwa_module = bwa_module,
       }
 
       call QC.CollectUnsortedReadgroupBamQualityMetrics as CollectUnsortedReadgroupBamQualityMetrics {
          input:
             input_bam = BwaMem.aligned_bam,
             output_bam_prefix = basename(BwaMem.aligned_bam) + ".qc.readgroup_bam_quality_metrics",
+            picard_module = picard_module,
       }
      
    }
@@ -81,14 +85,15 @@ workflow DNAProcessing {
          metrics_filename = sample_name + ".duplicate_metrics",
 #      total_input_size = SumFloats.total_size,
          compression_level = compression_level,
+         picard_module = picard_module,
    }
 
-    call BamUtils.BamAddProgramLine as BamAddImageVersion {
-        input:
-            bamfile = MarkDuplicates.output_bam,
-            id = 'nsm-tools-image',
-            version = Versions.image
-    }
+   #  call BamUtils.BamAddProgramLine as BamAddImageVersion {
+   #      input:
+   #          bamfile = MarkDuplicates.output_bam,
+   #          id = 'nsm-tools-image',
+   #          version = Versions.image
+   #  }
 
 
    call BamUtils.BamAddProgramLine as BamAddPipelineVersion {
@@ -96,6 +101,7 @@ workflow DNAProcessing {
          bamfile = BamAddImageVersion.output_bam,
          id = 'nsm-analysis',
          version = Versions.package
+         samtools_module = samtools_module,
 
     }
 
@@ -112,6 +118,7 @@ workflow DNAProcessing {
          input_bam = BamAddPipelineVersion.output_bam,
          output_bam_basename = sample_name,
          compression_level = compression_level,
+         picard_module = picard_module,
    }
 
   Int bqsr_divisor = 1
@@ -141,7 +148,8 @@ workflow DNAProcessing {
                ref_dict = references.reference_fasta.ref_dict,
                ref_fasta = references.reference_fasta.ref_fasta,
                ref_fasta_index = references.reference_fasta.ref_fasta_index,
-               bqsr_scatter = bqsr_divisor
+               bqsr_scatter = bqsr_divisor,
+               gatk_module = gatk_module
          }
       }
 
@@ -151,6 +159,7 @@ workflow DNAProcessing {
          input:
             input_bqsr_reports = BaseRecalibrator.recalibration_report,
             output_report_filename = sample_and_unmapped_bams.base_filename + ".recal_data.csv",
+            gatk_module = gatk_module
       }
 
       scatter (subgroup in CreateSequenceGroupingTSV.sequence_grouping_with_unmapped) {
@@ -168,7 +177,8 @@ workflow DNAProcessing {
                bqsr_scatter = bqsr_divisor,
                compression_level = compression_level,
                bin_base_qualities = bin_base_qualities,
-               somatic = somatic
+               somatic = somatic,
+               gatk_module = gatk_module
          }
       }
 
@@ -180,7 +190,8 @@ workflow DNAProcessing {
             input_bams = ApplyBQSR.recalibrated_bam,
             output_bam_basename = sample_and_unmapped_bams.base_filename,
             total_input_size = agg_bam_size,
-            compression_level = compression_level
+            compression_level = compression_level,
+            gatk_module = gatk_module
       }
 
    }
@@ -196,7 +207,8 @@ workflow DNAProcessing {
       input_bam_index = aligned_bam_index,
       sample_name = sample_name,
       haplotype_database_file = references.haplotype_database_file,
-      references = references
+      references = references,
+      picard_module = picard_module,
   }
 
 
@@ -210,6 +222,7 @@ workflow DNAProcessing {
             ref_fasta_index = references.reference_fasta.ref_fasta_index,
             wgs_coverage_interval_list = references.wgs_calling_interval_list,
             read_length = 250,
+            picard_module = picard_module
       }
 
       # QC the sample raw WGS metrics (common thresholds)
@@ -222,6 +235,7 @@ workflow DNAProcessing {
             ref_fasta_index = references.reference_fasta.ref_fasta_index,
             wgs_coverage_interval_list = references.wgs_calling_interval_list,
             read_length = 250 ,
+            picard_module = picard_module
       }      
    }
    if (!WGS) {
@@ -233,7 +247,9 @@ workflow DNAProcessing {
             ref_fasta = references.reference_fasta.ref_fasta,
             ref_fasta_index = references.reference_fasta.ref_fasta_index,
             target_interval_list = references.exome_calling_interval_list,
-            bait_interval_list = references.exome_calling_interval_list
+            bait_interval_list = references.exome_calling_interval_list,
+            picard_module = picard_module
+
       }
 
    }
@@ -245,6 +261,7 @@ workflow DNAProcessing {
          input_bam = aligned_bam,
          input_bam_index = aligned_bam_index,
          sample_name = sample_name,
+         gatk_module = gatk_module
    }
 
 

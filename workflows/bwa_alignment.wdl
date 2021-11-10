@@ -23,12 +23,25 @@ workflow BwaProcessing {
       Boolean bin_base_qualities = true
       Int compression_level = 5
       Boolean hard_clip_reads = false
+
+
+      String? bwa_module
+      String? picard_module
+      String? gatk_module
+      String? samtools_module
    }
 
    # Easier to refer to it later on.
    String sample_name  = sample_and_unmapped_bams.sample_name
    
-   call Versions.Versions as Versions
+   call Versions.Versions as Versions {
+      input:
+        bwa_module = bwa_module,
+        picard_module = picard_module,
+        gatk_module = gatk_module,
+        samtools_module = samtools_module
+
+   }
 
    scatter (unmapped_bam in sample_and_unmapped_bams.unmapped_bams) {
 
@@ -38,6 +51,7 @@ workflow BwaProcessing {
          input:
          input_bam = unmapped_bam,
          metrics_filename = bam_basename + ".quality_yield_metrics",
+         picard_module = picard_module
       }
 
 
@@ -48,6 +62,8 @@ workflow BwaProcessing {
             reference_fasta = references.reference_fasta,
             compression_level = compression_level,
             hard_clip_reads = hard_clip_reads,      
+            picard_module = picard_module,
+            bwa_module = bwa_module,
       }
 
 
@@ -55,6 +71,7 @@ workflow BwaProcessing {
          input:
             input_bam = BwaMem.aligned_bam,
             output_bam_prefix = basename(BwaMem.aligned_bam) + ".qc.readgroup_bam_quality_metrics",
+            picard_module = picard_module,
       }
      
    }
@@ -65,21 +82,24 @@ workflow BwaProcessing {
          output_bam_basename = sample_name + ".aligned.unsorted.merged",
          metrics_filename = sample_name + ".duplicate_metrics",
          compression_level = compression_level,
+         picard_module = picard_module,
    }
 
-    call BamUtils.BamAddProgramLine as BamAddImageVersion {
-        input:
-            bamfile = MarkDuplicates.output_bam,
-            id = 'nsm-tools-image',
-            version = Versions.image
-    }
+   #  call BamUtils.BamAddProgramLine as BamAddImageVersion {
+   #      input:
+   #          bamfile = MarkDuplicates.output_bam,
+   #          id = 'nsm-tools-image',
+   #          version = Versions.image,
+   #          samtools_module = samtools_module
+   #  }
 
 
    call BamUtils.BamAddProgramLine as BamAddPipelineVersion {
       input:
          bamfile = BamAddImageVersion.output_bam,
          id = 'nsm-analysis',
-         version = Versions.package
+         version = Versions.package,
+         samtools_module = samtools_module,
 
     }
 
@@ -89,6 +109,7 @@ workflow BwaProcessing {
          input_bam = BamAddPipelineVersion.output_bam,
          output_bam_basename = sample_name,
          compression_level = compression_level,
+         picard_module = picard_module,
    }
 
   Int bqsr_divisor = 1
@@ -118,7 +139,8 @@ workflow BwaProcessing {
                ref_dict = references.reference_fasta.ref_dict,
                ref_fasta = references.reference_fasta.ref_fasta,
                ref_fasta_index = references.reference_fasta.ref_fasta_index,
-               bqsr_scatter = bqsr_divisor
+               bqsr_scatter = bqsr_divisor,
+               gatk_module = gatk_module
          }
       }
 
@@ -128,6 +150,7 @@ workflow BwaProcessing {
          input:
             input_bqsr_reports = BaseRecalibrator.recalibration_report,
             output_report_filename = sample_and_unmapped_bams.base_filename + ".recal_data.csv",
+            gatk_module = gatk_module,
       }
 
       scatter (subgroup in CreateSequenceGroupingTSV.sequence_grouping_with_unmapped) {
@@ -145,7 +168,8 @@ workflow BwaProcessing {
                bqsr_scatter = bqsr_divisor,
                compression_level = compression_level,
                bin_base_qualities = bin_base_qualities,
-               somatic = somatic
+               somatic = somatic,
+               gatk_module = gatk_module,
          }
       }
 
@@ -157,7 +181,8 @@ workflow BwaProcessing {
             input_bams = ApplyBQSR.recalibrated_bam,
             output_bam_basename = sample_and_unmapped_bams.base_filename,
             total_input_size = agg_bam_size,
-            compression_level = compression_level
+            compression_level = compression_level,
+            picard_module = picard_module,
       }
 
    }
@@ -173,7 +198,8 @@ workflow BwaProcessing {
       input_bam_index = aligned_bam_index,
       sample_name = sample_name,
       haplotype_database_file = references.haplotype_database_file,
-      references = references
+      references = references,
+      picard_module = picard_module
   }
 
    call Utils.WriteStringsToFile as RunInfo {
