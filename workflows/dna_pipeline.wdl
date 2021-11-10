@@ -100,7 +100,7 @@ workflow DNAProcessing {
       input:
          bamfile = BamAddImageVersion.output_bam,
          id = 'nsm-analysis',
-         version = Versions.package
+         version = Versions.package,
          samtools_module = samtools_module,
 
     }
