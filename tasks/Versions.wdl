@@ -67,7 +67,7 @@ workflow Versions {
           version_file = version_file
     }
 
-    call Singularity as Singularity
+#    call Singularity as Singularity
 
     output {
         String package  = Package.version
@@ -78,7 +78,8 @@ workflow Versions {
         String bcftools = Bcftools.version
         String bedtools = Bedtools.version
         String star     = Star.version        
-        String singularity = Singularity.version
+#        String singularity = Singularity.version
+        String singularity = "Meh"
         String image    = Image.version
         String salmon   = Salmon.version
     }
