@@ -1,0 +1,13 @@
+{
+  "Versions_test.image": "/usr/local/images/nsm-tools.sif",
+  "Versions_test.version_file": "/usr/local/lib/nsm-analysis/version.json",
+  "Versions_test.bcftools_module": "bcftools",
+  "Versions_test.bedtools_module": "bedtools",
+  "Versions_test.gatk_module": "gatk",
+  "Versions_test.picard_module": "picard",
+  "Versions_test.salmon_module": "salmon",
+  "Versions_test.samtools_module": "samtools/1.12",
+  "Versions_test.star_module": "star",
+  "Versions_test.bwa_module": "bwa"
+}
+

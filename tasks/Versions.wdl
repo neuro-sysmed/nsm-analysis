@@ -33,12 +33,6 @@ task Package {
     input {
       String version_file = "/usr/local/lib/nsm-analysis/version.json"
     }
-  # returns null for unset keys
-#    Map[String, String?] version_map = read_json(version_file)
-
-#    String version_str = if defined(version_map['dev']) 
-#            then "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}-dev~{version_map['dev']}" 
-#            else "~{version_map['major']}.~{version_map['minor']}.~{version_map['patch']}"
 
     command {
         RepoVersion=$(jq -r 'if .dev then 
@@ -57,7 +51,6 @@ task Package {
     }
 
     output {
-#        String version = version_str
         String version = read_string(stdout())
     }
 
@@ -75,8 +68,8 @@ task Image {
 
     command {
         image_version=$(singularity inspect ~{image} 2>&1 | \
-            grep -e 'org.label-schema.usage.singularity.deffile.from' | \
-            perl -pe 's/org.label-schema.usage.singularity.deffile.from: //')
+        grep -e 'org.label-schema.usage.singularity.deffile.from' | \
+        perl -pe 's/org.label-schema.usage.singularity.deffile.from: //')
 
         echo $image_version
     }
@@ -117,14 +110,19 @@ task Singularity {
 
 task Salmon {
     input {
-      String salmon_cmd = "/usr/local/bin/salmon"
+      String salmon_cmd = 'salmon'
+      String? salmon_module
     }
 
     command {
-        singularity_version=$(~{salmon_cmd} --version 2>&1 | \
+        if [ -z ${salmon_module+"x"} ]; then
+            module load ~{salmon_module}
+        fi
+
+        salmon_version=$(~{salmon_cmd} --version 2>&1 | \
             perl -pe 's/^salmon //')
 
-        echo $singularity_version
+        echo $salmon_version
     }
 
     runtime {
@@ -140,11 +138,15 @@ task Salmon {
 
 task Bwa {
     input {
-        String bwa_cmd = '/usr/local/bin/bwa'
-        String? image
+        String bwa_cmd = 'bwa'
+        String? bwa_module
     }
 
     command {
+        if [ -z ${bwa_module+"x"} ]; then
+            module load ~{bwa_module}
+        fi
+
         bwa_version=$(~{bwa_cmd} 2>&1 | \
             grep -e '^Version' | \
             sed 's/Version: //')
@@ -160,14 +162,18 @@ task Bwa {
 
 task Samtools {
     input {
-        String samtools_cmd = '/usr/local/bin/samtools'
-        String? image
+        String samtools_cmd = 'samtools'
+        String? samtools_module
     }
 
     command {
-         samtools_version=$(~{samtools_cmd} 2>&1  | \
-             egrep Version | \
-             perl -pe 's/Version: (.*?) .*/$1/')
+        if [ -z ${samtools_module+"x"} ]; then
+            module load ~{samtools_module}
+        fi
+
+        samtools_version=$(~{samtools_cmd} 2>&1  | \
+            egrep Version | \
+            perl -pe 's/Version: (.*?) .*/$1/')
 
         echo $samtools_version
     }
@@ -180,12 +186,16 @@ task Samtools {
 
 task Picard {
     input {
-        String picard_cmd = 'java -jar /usr/local/jars/picard.jar '
-        String? image
+        String PICARD_JAR = '/usr/local/jars/picard.jar '
+        String? picard_module
     }
 
     command {
-        picard_version=$(~{picard_cmd} MarkDuplicates --version 2>&1 | \
+        if [ -z ${picard_module+"x"} ]; then
+            module load ~{picard_module}
+        fi
+
+        picard_version=$(java -jar ~{PICARD_JAR} MarkDuplicates --version 2>&1 | \
             egrep ^Version | \
             perl -pe 's/Version://')
 
@@ -199,11 +209,15 @@ task Picard {
 
 task Gatk {
     input {
-        String gatk_cmd = '/usr/local/bin/gatk'
-        String? image
+        String gatk_cmd = 'gatk'
+        String? gatk_module
     }
 
     command {
+        if [ -z ${gatk_module+"x"} ]; then
+            module load ~{gatk_module}
+        fi
+
         gatk_version=$(~{gatk_cmd} --version | \
              egrep "The Genome Analysis Toolkit" | \
              perl -pe 's/.* v//')
@@ -218,11 +232,15 @@ task Gatk {
 
 task Star {
     input {
-        String star_cmd = '/usr/local/bin/STAR'
-        String? image
+        String star_cmd = 'STAR'
+        String? star_module
     }
 
     command {
+        if [ -z ${star_module+"x"} ]; then
+            module load ~{star_module}
+        fi
+
          star_version=$(~{star_cmd} | \
              egrep version | \
              perl -pe 's/.* version=//')
@@ -237,13 +255,16 @@ task Star {
 
 task Bcftools {
     input {
-        String bcftools_cmd = '/usr/local/bin/bcftools'
-        String? image
+        String bcftools_cmd = 'bcftools'
+        String? bcftools_module
     }
 
 #    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
 
     command {
+        if [ -z ${bcftools_module+"x"} ]; then
+            module load ~{bcftools_module}
+        fi
         bcftools_version=$(~{bcftools_cmd} 2>&1 | \
              egrep Vers | \
              perl -pe 's/Version: (.*?) .*/$1/')
@@ -260,12 +281,16 @@ task Bcftools {
 task Bedtools {
     input {
         String bedtools_cmd = '/usr/local/bin/bedtools'
-        String? image
+        String? bedtools_module
     }
 
 #    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
 
     command {
+        if [ -z ${bedtools_module+"x"} ]; then
+             module load ~{bedtools_module}
+        fi
+
         bedtools_version=$(~{bedtools_cmd} --version  | \
              perl -pe 's/^bedtools //')
 

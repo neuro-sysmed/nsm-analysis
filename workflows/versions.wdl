@@ -6,14 +6,36 @@ version 1.0
 import "../tasks/Utils.wdl" as Utils
 import "../tasks/Versions.wdl" as Versions
 
-workflow DNAProcessing {
+workflow Versions_test {
 
    input {
-      Boolean UseModules = false
+      String? image
+      String? version_file
+      String? bcftools_module
+      String? bedtools_module
+      String? gatk_module
+      String? picard_module
+      String? salmon_module
+      String? samtools_module
+      String? star_module
+      String? bwa_module
    }
 
    
-   call Versions.Versions as Versions
+   call Versions.Versions as Versions {
+      input:
+         image = image,
+         version_file = version_file,
+         bcftools_module = bcftools_module,
+         bedtools_module = bedtools_module,
+         gatk_module = gatk_module,
+         picard_module = picard_module,
+         salmon_module = salmon_module,
+         samtools_module = samtools_module,
+         star_module = star_module,
+         bwa_module = bwa_module
+   }
+
 
 
    call Utils.WriteStringsToFile as RunInfo {
