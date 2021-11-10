@@ -7,12 +7,19 @@ task CollectQualityYieldMetrics {
     File input_bam
     String metrics_filename
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
 
   command {
     mkdir qc
-    java -Xms2000m -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+    
+    java -Xms2000m -jar $PICARD_JAR \
       CollectQualityYieldMetrics \
       INPUT=~{input_bam} \
       OQ=true \
@@ -36,12 +43,19 @@ task CollectUnsortedReadgroupBamQualityMetrics {
     File input_bam
     String output_bam_prefix
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
 
   command {
     mkdir qc
-    java -Xms5000m -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms5000m -jar $PICARD_JAR \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       OUTPUT=qc/~{output_bam_prefix} \
@@ -84,7 +98,8 @@ task CollectReadgroupBamQualityMetrics {
     File ref_fasta
     File ref_fasta_index
     Boolean collect_gc_bias_metrics = true
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -97,7 +112,13 @@ task CollectReadgroupBamQualityMetrics {
       qc/~{output_bam_prefix}.gc_bias.pdf \
       qc/~{output_bam_prefix}.gc_bias.summary_metrics
 
-    java -Xms5000m -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms5000m -jar $PICARD_JAR \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
@@ -132,7 +153,8 @@ task CollectAggregationMetrics {
     File ref_fasta
     File ref_fasta_index
     Boolean collect_gc_bias_metrics = true
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
     Int memory = 5000
   }
 
@@ -148,7 +170,13 @@ task CollectAggregationMetrics {
       qc/~{output_bam_prefix}.insert_size_metrics \
       qc/~{output_bam_prefix}.insert_size_histogram.pdf
 
-    java -Xms~{memory}m -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms~{memory}m -jar $PICARD_JAR \
       CollectMultipleMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
@@ -195,7 +223,8 @@ task ConvertSequencingArtifactToOxoG {
     File ref_fasta
     File ref_fasta_index
     Int memory_multiplier = 1
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -207,7 +236,14 @@ task ConvertSequencingArtifactToOxoG {
   command {
     input_base=$(dirname ~{pre_adapter_detail_metrics})/~{base_name}
     mkdir qc
-    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms~{java_memory_size}m -jar $PICARD_JAR \
       ConvertSequencingArtifactToOxoG \
       --INPUT_BASE $input_base \
       --OUTPUT_BASE qc/~{base_name} \
@@ -234,15 +270,23 @@ task CrossCheckFingerprints {
     Float lod_threshold
     String cross_check_by
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   Int disk_size = ceil(total_input_size) + 20
 
   command <<<
     mkdir qc
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
     java -Dsamjdk.buffer_size=131072 \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3000m \
-      -jar ~{picard_jar} \
+      -jar $PICARD_JAR \
       CrosscheckFingerprints \
       OUTPUT=qc/~{metrics_filename} \
       HAPLOTYPE_MAP=~{haplotype_database_file} \
@@ -272,6 +316,7 @@ task CheckFingerprint {
     File? genotypes_index
     String sample
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   Int disk_size = ceil(size(input_bam, "GiB")) + 20
@@ -282,9 +327,16 @@ task CheckFingerprint {
 
   command <<<
     mkdir qc
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
     java -Dsamjdk.buffer_size=131072 \
       -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms3g  \
-      -jar ~{picard_jar} \
+      -jar $PICARD_JAR \
       CheckFingerprint \
       INPUT=~{input_bam} \
       SUMMARY_OUTPUT=qc/~{summary_metrics_location} \
@@ -366,6 +418,7 @@ task ValidateSamFile {
     Boolean? is_outlier_data
     Int memory_multiplier = 1
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   Int memory_size = ceil(7 * memory_multiplier)
@@ -373,7 +426,14 @@ task ValidateSamFile {
 
   command {
     mkdir qc
-    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms~{java_memory_size}m -jar $PICARD_JAR \
       ValidateSamFile \
       INPUT=~{input_bam} \
       OUTPUT=qc/~{report_filename} \
@@ -405,11 +465,19 @@ task CollectWgsMetrics {
     File ref_fasta_index
     Int read_length
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   command {
     mkdir qc
-    java -Xms2000m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms2000m -jar $PICARD_JAR \
       CollectWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -443,6 +511,7 @@ task CollectRawWgsMetrics {
     Int memory_multiplier = 1
     Int additional_disk = 20
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
@@ -453,7 +522,14 @@ task CollectRawWgsMetrics {
 
   command {
     mkdir qc
-    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms~{java_memory_size}m -jar $PICARD_JAR \
       CollectRawWgsMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -485,12 +561,20 @@ task CollectRnaSeqMetrics {
     File ref_fasta_index
     Int read_length
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
 
   command {
     mkdir qc
-    java -Xms2000m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms2000m -jar $PICARD_JAR \
       CollectRnaSeqMetrics \
       INPUT=~{input_bam} \
       VALIDATION_STRINGENCY=SILENT \
@@ -524,6 +608,7 @@ task CollectHsMetrics {
     File bait_interval_list
     Int memory_multiplier = 1
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   # Try to fit the input bam into memory, within reason.
@@ -535,7 +620,14 @@ task CollectHsMetrics {
   # There are probably more metrics we want to generate with this tool
   command {
     mkdir qc
-    java -Xms~{java_memory_size}m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms~{java_memory_size}m -jar $PICARD_JAR \
       CollectHsMetrics \
       INPUT=~{input_bam} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
@@ -566,12 +658,20 @@ task CalculateReadGroupChecksum {
     File input_bam_index
     String read_group_md5_filename
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
 
   command {
     mkdir qc
-    java -Xms1000m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms1000m -jar $PICARD_JAR \
       CalculateReadGroupChecksum \
       INPUT=~{input_bam} \
       OUTPUT=qc/~{read_group_md5_filename}
@@ -629,12 +729,20 @@ task CollectVariantCallingMetrics {
     File evaluation_interval_list
     Boolean is_gvcf = true
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
 
   command {
     mkdir qc
-    java -Xms2000m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms2000m -jar $PICARD_JAR \
       CollectVariantCallingMetrics \
       INPUT=~{input_vcf} \
       OUTPUT=qc/~{metrics_basename} \
