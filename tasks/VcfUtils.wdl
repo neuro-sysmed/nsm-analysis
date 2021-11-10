@@ -185,7 +185,7 @@ task GenotypeGVCF {
     File reference_fasta_index
     File reference_dict
     String gatk_cmd = "gatk"
-    String gatk_module
+    String? gatk_module
   }
 
 
