@@ -240,9 +240,12 @@ task ScatterIntervalList {
     set -e
     mkdir -p out
 
-    if [[ ! -z "~{gatk_module}" ]]; then
-        module load ~{gatk_module}
+    PICARD_JAR=~{picard_jar}
+
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
     fi
+
 
     java -Xms1g -jar $PICARD_JAR \
       IntervalListTools \
