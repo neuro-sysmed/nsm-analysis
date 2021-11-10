@@ -174,7 +174,7 @@ task Salmon {
     }
 
     command {
-        if [ -z ${~{salmon_module}+"x"} ]; then
+        if [[ ! -z "~{salmon_module}" ]]; then
             module load ~{salmon_module}
         fi
 
@@ -202,7 +202,7 @@ task Bwa {
     }
 
     command {
-        if [ -z ${bwa_module+"x"} ]; then
+        if [[ ! -z "~{bwa_module}" ]]; then
             module load ~{bwa_module}
         fi
 
@@ -226,7 +226,7 @@ task Samtools {
     }
 
     command {
-        if [ -z ${samtools_module+"x"} ]; then
+        if [[ ! -z "~{samtools_module}" ]]; then
             module load ~{samtools_module}
         fi
 
@@ -250,7 +250,7 @@ task Picard {
     }
 
     command {
-        if [ -z ${picard_module+"x"} ]; then
+        if [[ ! -z "~{picard_module}" ]]; then
             module load ~{picard_module}
         fi
 
@@ -273,7 +273,7 @@ task Gatk {
     }
 
     command {
-        if [ -z ${gatk_module+"x"} ]; then
+        if [[ ! -z "~{gatk_module}" ]]; then
             module load ~{gatk_module}
         fi
 
@@ -296,7 +296,7 @@ task Star {
     }
 
     command {
-        if [ -z ${star_module+"x"} ]; then
+        if [[ ! -z "~{star_module}" ]]; then
             module load ~{star_module}
         fi
 
@@ -321,7 +321,7 @@ task Bcftools {
 #    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
 
     command {
-        if [ -z ${bcftools_module+"x"} ]; then
+        if [[ ! -z "~{bcftools_module}" ]]; then
             module load ~{bcftools_module}
         fi
         bcftools_version=$(~{bcftools_cmd} 2>&1 | \
@@ -346,7 +346,7 @@ task Bedtools {
 #    String bcftools_cmd = 'singularity exec /home/brugger/projects/kbr-tools/nsm-tools.sif /usr/local/bin/bcftools'
 
     command {
-        if [ -z ${bedtools_module+"x"} ]; then
+        if [[ ! -z "~{bedtools_module}" ]]; then
              module load ~{bedtools_module}
         fi
 
