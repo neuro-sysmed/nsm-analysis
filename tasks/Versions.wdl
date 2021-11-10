@@ -57,10 +57,10 @@ workflow Versions {
           salmon_module = salmon_module
     }
 
-    call Image as Image {
-        input:
-          image = image
-    }
+    # call Image as Image {
+    #     input:
+    #       image = image
+    # }
 
 #    call Package as Package {
 #        input:
@@ -71,6 +71,10 @@ workflow Versions {
 
     output {
 #        String package  = Package.version
+#        String singularity = Singularity.version
+#        String image    = Image.version
+        String image    = "Image.version"
+        String singularity = "Meh"
         String package  = "Package.version"
         String bwa      = Bwa.version
         String samtools = Samtools.version
@@ -79,9 +83,6 @@ workflow Versions {
         String bcftools = Bcftools.version
         String bedtools = Bedtools.version
         String star     = Star.version        
-#        String singularity = Singularity.version
-        String singularity = "Meh"
-        String image    = Image.version
         String salmon   = Salmon.version
     }
 }
