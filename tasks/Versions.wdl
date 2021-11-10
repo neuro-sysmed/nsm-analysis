@@ -54,7 +54,7 @@ workflow Versions {
 
     call Salmon as Salmon {
         input:
-          bwa_module = bwa_module
+          salmon_module = salmon_module
     }
 
     call Image as Image {
