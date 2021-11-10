@@ -245,16 +245,18 @@ task Samtools {
 
 task Picard {
     input {
-        String PICARD_JAR = '/usr/local/jars/picard.jar '
+        String picard_jar = '/usr/local/jars/picard.jar '
         String? picard_module
     }
 
     command {
+        PICARD_JAR=~{picard_jar}
+
         if [[ ! -z "~{picard_module}" ]]; then
             module load ~{picard_module}
         fi
 
-        picard_version=$(java -jar ~{PICARD_JAR} MarkDuplicates --version 2>&1 | \
+        picard_version=$(java -jar $PICARD_JAR MarkDuplicates --version 2>&1 | \
             egrep ^Version | \
             perl -pe 's/Version://')
 
