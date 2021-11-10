@@ -62,15 +62,16 @@ workflow Versions {
           image = image
     }
 
-    call Package as Package {
-        input:
-          version_file = version_file
-    }
+#    call Package as Package {
+#        input:
+#          version_file = version_file
+#    }
 
 #    call Singularity as Singularity
 
     output {
-        String package  = Package.version
+#        String package  = Package.version
+        String package  = "Package.version"
         String bwa      = Bwa.version
         String samtools = Samtools.version
         String picard   = Picard.version
