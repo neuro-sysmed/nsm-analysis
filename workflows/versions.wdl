@@ -38,23 +38,23 @@ workflow Versions_test {
 
 
 
-   call Utils.WriteStringsToFile as RunInfo {
-      input:
-         strings = ["workflow\tdna-pipeline",
-                    "bwa\t"+Versions.bwa,
-                    "picard\t"+Versions.picard,
-                    "gatk\t"+Versions.gatk,
-                    "samtools\t"+Versions.samtools,
-                    "nsm-analysis\t"+Versions.package,
-                    "image\t"+Versions.image,
-                    "singularity\t"+Versions.singularity,
-                    "bcftools\t"+Versions.bcftools,
-                    "bedtools\t"+Versions.bedtools,
-                    "star\t"+Versions.star,
-                    "salmon\t"+Versions.salmon,
-                  ],
-         outfile = "versions.runinfo"
-   }
+   # call Utils.WriteStringsToFile as RunInfo {
+   #    input:
+   #       strings = ["workflow\tdna-pipeline",
+   #                  "bwa\t"+Versions.bwa,
+   #                  "picard\t"+Versions.picard,
+   #                  "gatk\t"+Versions.gatk,
+   #                  "samtools\t"+Versions.samtools,
+   #                  "nsm-analysis\t"+Versions.package,
+   #                  "image\t"+Versions.image,
+   #                  "singularity\t"+Versions.singularity,
+   #                  "bcftools\t"+Versions.bcftools,
+   #                  "bedtools\t"+Versions.bedtools,
+   #                  "star\t"+Versions.star,
+   #                  "salmon\t"+Versions.salmon,
+   #                ],
+   #       outfile = "versions.runinfo"
+   # }
 
 
   output {
