@@ -59,7 +59,7 @@ workflow Versions_test {
 
   output {
 
-      File runinfo = RunInfo.outfile
+#      File runinfo = RunInfo.outfile
    }
 
 
