@@ -174,7 +174,7 @@ task Salmon {
     }
 
     command {
-        if [ -z ${salmon_module+"x"} ]; then
+        if [ -z ${~{salmon_module}+"x"} ]; then
             module load ~{salmon_module}
         fi
 
