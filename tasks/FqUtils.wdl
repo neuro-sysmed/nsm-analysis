@@ -12,7 +12,8 @@ task FqToBam {
     String library_name = "NA"
     Int compression_level = 2
     String outdir = "."
-    String picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "picard.jar"
+    String? picard_module
 
   }
 
@@ -22,9 +23,13 @@ task FqToBam {
       mkdir "~{outdir}/"
     fi
 
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
 
     if [[-z fq_rev]]; then
-      java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+      java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar $PICARD_JAR \
         FastqToSam \
         -FASTQ ~{fq_fwd} \
         -OUTPUT ~{output_bam_filename} \
@@ -32,7 +37,7 @@ task FqToBam {
         -SAMPLE_NAME ~{sample_name} \
         -LIBRARY_NAME ~{library_name} 
     else
-      java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+      java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar $PICARD_JAR \
         FastqToSam \
         -FASTQ ~{fq_fwd} \
         -FASTQ2 ~{fq_rev} \

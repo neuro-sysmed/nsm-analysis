@@ -10,6 +10,7 @@ task MergeVCFs {
     Array[File] input_vcfs_indexes
     String output_vcf_name
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
 
@@ -17,7 +18,13 @@ task MergeVCFs {
   # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
   command {
     mkdir gvcfs
-    java -Xms2000m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Xms2000m -jar $PICARD_JAR \
       MergeVcfs \
       -INPUT ~{sep=' -INPUT ' input_vcfs} \
       -OUTPUT gvcfs/~{output_vcf_name}
@@ -37,13 +44,18 @@ task HardFilterVcf {
     File input_vcf_index
     String vcf_basename
     File interval_list
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String? gatk_module
   }
 
   Int disk_size = ceil(2 * size(input_vcf, "GiB")) + 20
   String output_vcf_name = vcf_basename + ".filtered.vcf.gz"
 
   command {
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
      ~{gatk_cmd} --java-options "-Xms3000m" \
       VariantFiltration \
       -V ~{input_vcf} \
@@ -72,7 +84,8 @@ task CNNScoreVariants {
     File ref_fasta
     File ref_fasta_index
     File ref_dict
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String? gatk_module
   }
 
   String base_vcf = basename(input_vcf)
@@ -86,7 +99,11 @@ task CNNScoreVariants {
   String tensor_type = if defined(bamout) then "read-tensor" else "reference"
 
   command {
-     ~{gatk_cmd} --java-options -Xmx10g CNNScoreVariants \
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
+    ~{gatk_cmd} --java-options -Xmx10g CNNScoreVariants \
        -V ~{input_vcf} \
        -R ~{ref_fasta} \
        -O ~{output_vcf} \
@@ -123,12 +140,16 @@ task FilterVariantTranches {
     File dbsnp_resource_vcf
     File dbsnp_resource_vcf_index
     String info_key
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String? gatk_module
 
   }
 
 
   command {
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
     ~{gatk_cmd} --java-options -Xmx6g FilterVariantTranches \
       -V ~{input_vcf} \
@@ -163,7 +184,8 @@ task GenotypeGVCF {
     File reference_fasta
     File reference_fasta_index
     File reference_dict
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String gatk_module
   }
 
 
@@ -171,6 +193,10 @@ task GenotypeGVCF {
   # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
   command {
     mkdir vcfs
+
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
     ~{gatk_cmd} GenotypeGVCFs \
       -R ~{reference_fasta} \

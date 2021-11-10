@@ -43,6 +43,8 @@ task SplitIntervalList { #keep
     File ref_dict
     Boolean sample_names_unique_done # this is needed to ensure not running before prev step done. Stupid!
     String scatter_mode = "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
+    String gatk_cmd = "gatk"
+    String? gatk_module
   }
 
   parameter_meta {
@@ -52,7 +54,11 @@ task SplitIntervalList { #keep
   }
 
   command {
-    gatk --java-options -Xms3g SplitIntervals \
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
+    ~{gatk_cmd} --java-options -Xms3g SplitIntervals \
       -L ~{interval_list} -O  scatterDir -scatter ~{scatter_count} -R ~{ref_fasta} \
       -mode ~{scatter_mode} --interval-merging-rule OVERLAPPING_ONLY
   }
@@ -75,6 +81,8 @@ task ImportGVCFs { #keep
     String workspace_dir_name
 
     Int batch_size
+    String gatk_cmd = 'gatk'
+    String? gatk_module
 
   }
 
@@ -82,6 +90,10 @@ task ImportGVCFs { #keep
     set -euo pipefail
 
     rm -rf ~{workspace_dir_name}
+
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
     # We've seen some GenomicsDB performance regressions related to intervals, so we're going to pretend we only have a single interval
     # using the --merge-input-intervals arg
@@ -130,6 +142,9 @@ task GenotypeGVCFs {  #keep
     File dbsnp_vcf
     File dbsnp_vcf_index
 
+    String gatk_cmd = 'gatk'
+    String? gatk_module
+
     # This is needed for gVCFs generated with GATK3 HaplotypeCaller
     Boolean allow_old_rms_mapping_quality_annotation_data = false
   }
@@ -143,10 +158,14 @@ task GenotypeGVCFs {  #keep
   command <<<
     set -euo pipefail
 
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
     tar -xf ~{workspace_tar}
     WORKSPACE=$(basename ~{workspace_tar} .tar)
 
-    gatk --java-options -Xms8g \
+    ~{gatk_cmd} --java-options -Xms8g \
       GenotypeGVCFs \
       -R ~{ref_fasta} \
       -O ~{output_vcf_filename} \
@@ -181,19 +200,24 @@ task HardFilterAndMakeSitesOnlyVcf {  #keep
     String variant_filtered_vcf_filename
     String sites_only_vcf_filename
 
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   command <<<
     set -euo pipefail
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
-    gatk --java-options -Xms3g \
+    ~{gatk_cmd} --java-options -Xms3g \
       VariantFiltration \
       --filter-expression "ExcessHet > ~{excess_het_threshold}" \
       --filter-name ExcessHet \
       -O ~{variant_filtered_vcf_filename} \
       -V ~{vcf}
 
-    gatk --java-options -Xms3g \
+    ~{gatk_cmd} --java-options -Xms3g \
       MakeSitesOnlyVcf \
       -I ~{variant_filtered_vcf_filename} \
       -O ~{sites_only_vcf_filename}
@@ -232,13 +256,18 @@ task IndelsVariantRecalibrator {  #keep
     File dbsnp_resource_vcf_index
     Boolean use_allele_specific_annotations
     Int max_gaussians = 4
+    String gatk_cmd = 'gatk'
+    String gatk_module
 
   }
 
   command <<<
     set -euo pipefail
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
-    gatk --java-options -Xms24g \
+    ~{gatk_cmd} --java-options -Xms24g \
       VariantRecalibrator \
       -V ~{sites_only_variant_filtered_vcf} \
       -O ~{recalibration_filename} \
@@ -290,13 +319,17 @@ task SNPsVariantRecalibratorCreateModel { #keep
     File dbsnp_resource_vcf_index
     Boolean use_allele_specific_annotations
     Int max_gaussians = 6
-
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   command <<<
     set -euo pipefail
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
-    gatk --java-options -Xms100g \
+    ~{gatk_cmd} --java-options -Xms100g \
       VariantRecalibrator \
       -V ~{sites_only_variant_filtered_vcf} \
       -O ~{recalibration_filename} \
@@ -350,6 +383,8 @@ task SNPsVariantRecalibrator { #keep
     Int max_gaussians = 6
 
     Int? machine_mem_gb
+    String gatk_cmd = 'gatk'
+    String? gatk_module
 
   }
 
@@ -368,9 +403,13 @@ task SNPsVariantRecalibrator { #keep
   command <<<
     set -euo pipefail
 
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
     MODEL_REPORT=~{model_report}
 
-    gatk --java-options -Xms~{java_mem}g \
+    ~{gatk_cmd} --java-options -Xms~{java_mem}g \
       VariantRecalibrator \
       -V ~{sites_only_variant_filtered_vcf} \
       -O ~{recalibration_filename} \
@@ -406,6 +445,8 @@ task GatherTranches { #keep
     Array[File] tranches
     String output_filename
     String mode
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   parameter_meta {
@@ -441,7 +482,11 @@ task GatherTranches { #keep
 
     cat $tranches_fofn | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
 
-    gatk --java-options -Xms6g \
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
+    ~{gatk_cmd} --java-options -Xms6g \
       GatherTranches \
       --input inputs.list \
       --mode ~{mode} \
@@ -473,12 +518,17 @@ task ApplyRecalibration {  #keep
     Float indel_filter_level
     Float snp_filter_level
     Boolean use_allele_specific_annotations
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   command <<<
     set -euo pipefail
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
-    gatk --java-options -Xms5g \
+    ~{gatk_cmd} --java-options -Xms5g \
       ApplyVQSR \
       -O tmp.indel.recalibrated.vcf \
       -V ~{input_vcf} \
@@ -489,7 +539,7 @@ task ApplyRecalibration {  #keep
       --create-output-variant-index true \
       -mode INDEL
 
-    gatk --java-options -Xms5g \
+    ~{gatk_cmd} --java-options -Xms5g \
       ApplyVQSR \
       -O ~{recalibrated_vcf_filename} \
       -V tmp.indel.recalibrated.vcf \
@@ -517,6 +567,8 @@ task GatherVcfs { #keep
   input {
     Array[File] input_vcfs
     String output_vcf_name
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   parameter_meta {
@@ -527,11 +579,14 @@ task GatherVcfs { #keep
 
   command <<<
     set -euo pipefail
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
     # --ignore-safety-checks makes a big performance difference so we include it in our invocation.
     # This argument disables expensive checks that the file headers contain the same set of
     # genotyped samples and that files are in order by position of first record.
-    gatk --java-options -Xms6g \
+    ~{gatk_cmd} --java-options -Xms6g \
       GatherVcfsCloud \
       --ignore-safety-checks \
       --gather-type BLOCK \
@@ -562,12 +617,17 @@ task CollectVariantCallingMetrics {  #keep
     File dbsnp_vcf_index
     File interval_list
     File ref_dict
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   command <<<
     set -euo pipefail
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
 
-    gatk --java-options -Xms6g \
+    ~{gatk_cmd} --java-options -Xms6g \
       CollectVariantCallingMetrics \
       --INPUT ~{input_vcf} \
       --DBSNP ~{dbsnp_vcf} \

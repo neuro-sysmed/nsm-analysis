@@ -28,6 +28,11 @@ workflow DNAProcessing {
       Boolean hard_clip_reads = false
       VariantCallingScatterSettings scatter_settings
 
+      String? bwa_module
+      String? samtools_module
+      String? picard_module
+      String? gatk_module
+
    }
 
    # Easier to refer to it later on.

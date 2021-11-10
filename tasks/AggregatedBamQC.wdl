@@ -13,6 +13,7 @@ input {
     DNASeqSingleSampleReferences references
     File? fingerprint_genotypes_file
     File? fingerprint_genotypes_index
+    String? picard_module
   }
 
   # QC the final BAM (consolidated after scattered BQSR)
@@ -23,7 +24,8 @@ input {
       output_bam_prefix = sample_name + ".readgroup",
       ref_dict = references.reference_fasta.ref_dict,
       ref_fasta = references.reference_fasta.ref_fasta,
-      ref_fasta_index = references.reference_fasta.ref_fasta_index
+      ref_fasta_index = references.reference_fasta.ref_fasta_index,
+      picard_module = picard_module
   }
 
   # QC the final BAM some more (no such thing as too much QC)
@@ -34,7 +36,8 @@ input {
       output_bam_prefix = sample_name,
       ref_dict = references.reference_fasta.ref_dict,
       ref_fasta = references.reference_fasta.ref_fasta,
-      ref_fasta_index = references.reference_fasta.ref_fasta_index
+      ref_fasta_index = references.reference_fasta.ref_fasta_index,
+      picard_module = picard_module
   }
 
   if (defined(haplotype_database_file) && defined(fingerprint_genotypes_file)) {
@@ -47,7 +50,8 @@ input {
         genotypes = fingerprint_genotypes_file,
         genotypes_index = fingerprint_genotypes_index,
         output_basename = sample_name,
-        sample = sample_name
+        sample = sample_name,
+        picard_module = picard_module
     }
   }
 
@@ -57,6 +61,7 @@ input {
       input_bam = input_bam,
       input_bam_index = input_bam_index,
       read_group_md5_filename = sample_name + ".bam.read_group_md5",
+      picard_module = picard_module
   }
 
   output {

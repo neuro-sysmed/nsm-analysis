@@ -11,7 +11,7 @@ task BwaMem {
 # Read unmapped BAM, convert on-the-fly to FASTQ and stream to BWA MEM for alignment, then stream to MergeBamAlignment
   input {
     File input_bam
-    String bwa_cmd = "/usr/local/bin/bwa"
+    String bwa_cmd = "bwa"
     String picard_jar = "/usr/local/jars/picard.jar"
     String bam_basename
 
@@ -19,6 +19,8 @@ task BwaMem {
 
     Int compression_level
     Boolean hard_clip_reads = false
+    String? bwa_module
+    String? picard_module
   }
 
 #  Float unmapped_bam_size = size(input_bam, "GiB")
@@ -33,7 +35,14 @@ task BwaMem {
 
   command <<<
 
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
 
+    if [[ ! -z "~{bwa_module}" ]]; then
+        module load ~{bwa_module}
+    fi
 
     # This is done before "set -o pipefail" because "bwa" will have a rc=1 and we don't want to allow rc=1 to succeed
     # because the sed may also fail with that error and that is something we actually want to fail on.
@@ -52,14 +61,14 @@ task BwaMem {
     bash_ref_fasta=~{reference_fasta.ref_fasta}
     # if reference_fasta.ref_alt has data in it,
     if [ -s ~{reference_fasta.ref_fasta} ]; then
-      java -Xms1000m -Xmx1000m -jar ~{picard_jar} \
+      java -Xms1000m -Xmx1000m -jar $PICARD_JAR \
         SamToFastq \
         INPUT=~{input_bam} \
         FASTQ=/dev/stdout \
         INTERLEAVE=true \
         NON_PF=true | \
       ~{bwa_cmd} ~{bwa_commandline} /dev/stdin - 2> >(tee ~{bam_basename}.bwa.stderr.log >&2) | \
-      java -Dsamjdk.compression_level=~{compression_level} -Xms1000m -Xmx1000m -jar ~{picard_jar} \
+      java -Dsamjdk.compression_level=~{compression_level} -Xms1000m -Xmx1000m -jar $PICARD_JAR \
         MergeBamAlignment \
         VALIDATION_STRINGENCY=SILENT \
         EXPECTED_ORIENTATIONS=FR \
@@ -117,11 +126,16 @@ task Star {
       File rev_reads
       File gtf
       String genome_dir
-      String star_cmd = "/usr/local/bin/STAR"
+      String star_cmd = "STAR"
       Int threads = 4
+      String? star_module
   }
 
   command {
+    if [[ ! -z "~{star_module}" ]]; then
+        module load ~{star_module}
+    fi   
+
     ~{star_cmd} --outSAMattributes All --outSAMtype BAM SortedByCoordinate \
        --quantMode GeneCounts \
        --readFilesCommand zcat \
@@ -148,9 +162,13 @@ task Salmon {
       File? rev_reads
       String reference_dir
       Int threads = 4
+      String? salmon_module
   }
 
   command {
+    if [[ ! -z "~{salmon_module}" ]]; then
+        module load ~{salmon_module}
+    fi
 
     if [  -z "~{rev_reads}" ]; then
         salmon quant -i ~{reference_dir} -l A -1 ~{fwd_reads} \

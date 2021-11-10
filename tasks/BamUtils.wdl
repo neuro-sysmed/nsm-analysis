@@ -21,7 +21,8 @@ task SortSam {
     File input_bam
     String output_bam_basename
     Int compression_level
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
 
   }
   # SortSam spills to disk a lot more because we are only store 300000 records in RAM now because its faster for our data so it needs
@@ -31,7 +32,13 @@ task SortSam {
 
   command {
     mkdir bams
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi    
+
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar $PICARD_JAR \
       SortSam \
       INPUT=~{input_bam} \
       OUTPUT=bams/~{output_bam_basename}.bam \
@@ -59,11 +66,17 @@ task Index {
   input {
     File basename
     Int compression_level =5
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi    
+
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar $PICARD_JAR \
       BuildBamIndex \
       --INPUT "~{basename}.bam" \
       --CREATE_MD5_FILE true 
@@ -88,16 +101,21 @@ task RevertSam {
     String output_bam_filename
     Int compression_level = 2
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
     String outdir = "."
   }
 
   command {
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi    
 
     if [  "~{outdir}" != "." ]; then
       mkdir "~{outdir}/"
     fi
 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar ~{picard_jar} \
+    java -Dsamjdk.compression_level=~{compression_level} -Xms4000m -jar $PICARD_JAR \
      RevertSam \
      -I ~{input_bam} \
      -O ~{outdir}/~{output_bam_filename} \
@@ -137,7 +155,8 @@ task MarkDuplicates {
     String metrics_filename
 #    Float total_input_size
     Int compression_level
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
 
     # The program default for READ_NAME_REGEX is appropriate in nearly every case.
     # Sometimes we wish to supply "null" in order to turn off optical duplicate detection
@@ -162,7 +181,12 @@ task MarkDuplicates {
   # While query-grouped isn't actually query-sorted, it's good enough for MarkDuplicates with ASSUME_SORT_ORDER="queryname"
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi    
+    
+    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar $PICARD_JAR \
       MarkDuplicates \
       INPUT=~{input_bam} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -194,7 +218,8 @@ task MergeAndMarkDuplicates {
     String metrics_filename
 #    Float total_input_size
     Int compression_level
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
 
     # The program default for READ_NAME_REGEX is appropriate in nearly every case.
     # Sometimes we wish to supply "null" in order to turn off optical duplicate detection
@@ -220,7 +245,12 @@ task MergeAndMarkDuplicates {
 
   command {
     mkdir qc 
-    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Dsamjdk.compression_level=~{compression_level} -Xms~{java_memory_size}g -jar $PICARD_JAR \
       MarkDuplicates \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -250,12 +280,17 @@ task MergeUnalignedBams {
     Array[File] bams
     String output_bam_basename
     Boolean? index = false
-    String? samtools_cmd = "/usr/local/bin/samtools"
+    String samtools_cmd = "samtools"
+    String? samtools_module
     
   }
 
     
   command {
+    if [[ ! -z "~{samtools_module}" ]]; then
+        module load ~{samtools_module}
+    fi
+
     ~{samtools_cmd} merge -n ~{output_bam_basename} ~{sep=' ' bams}
 #    if [~{index}]; then
 #      /usr/local/bin/samtools index -n ~{output_bam_basename} 
@@ -275,10 +310,15 @@ task BamAddProgramLine {
     String? name
     String? command_line
     String? description
-    String samtools_cmd = '/usr/local/bin/samtools'
+    String samtools_cmd = 'samtools'
+    String? samtools_module
   }
 
   command {
+    if [[ ! -z "~{samtools_module}" ]]; then
+        module load ~{samtools_module}
+    fi
+
     set -e
     ~{samtools_cmd} view --no-PG -H ~{bamfile} > ~{bamfile}.header
 
@@ -328,8 +368,8 @@ task BaseRecalibrator {
     File ref_fasta
     File ref_fasta_index
     Int bqsr_scatter
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String? gatk_module
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -343,6 +383,10 @@ task BaseRecalibrator {
   }
 
   command {
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+    
     ~{gatk_cmd} --java-options -Xms5g \
       BaseRecalibrator \
       -R ~{ref_fasta} \
@@ -382,7 +426,8 @@ task ApplyBQSR {
     Int additional_disk = 20
     Boolean bin_base_qualities = true
     Boolean somatic = false
-    String gatk_cmd = '/usr/local/bin/gatk'
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
@@ -399,6 +444,10 @@ task ApplyBQSR {
   }
 
   command {
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
     ~{gatk_cmd} --java-options "-Dsamjdk.compression_level=~{compression_level} -Xms3000m" \
       ApplyBQSR \
       --create-output-bam-md5 \
@@ -430,11 +479,15 @@ task GatherBqsrReports {
   input {
     Array[File] input_bqsr_reports
     String output_report_filename
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.8.0"
-    String gatk_cmd = '/usr/local/bin/gatk'
+    String gatk_cmd = 'gatk'
+    String? gatk_module
   }
 
   command {
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
     ~{gatk_cmd} --java-options "-Xms3000m" \
       GatherBQSRReports \
       -I ~{sep=' -I ' input_bqsr_reports} \
@@ -456,14 +509,20 @@ task GatherSortedBamFiles {
     String output_bam_basename
     Float total_input_size
     Int compression_level
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   # Multiply the input bam size by two to account for the input and output
   Int disk_size = ceil(2 * total_input_size) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar ~{picard_jar} \
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar $PICARD_JAR \
       GatherBamFiles \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -489,14 +548,20 @@ task GatherUnsortedBamFiles {
     String output_bam_basename
     Float total_input_size
     Int compression_level
-    String? picard_jar = "/usr/local/jars/picard.jar"
+    String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   # Multiply the input bam size by two to account for the input and output
   Int disk_size = ceil(2 * total_input_size) + 20
 
   command {
-    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar ~{picard_jar}   \
+    PICARD_JAR=~{picard_jar}
+    if [[ ! -z "~{picard_module}" ]]; then
+        module load ~{picard_module}
+    fi
+
+    java -Dsamjdk.compression_level=~{compression_level} -Xms2000m -jar $PICARD_JAR   \
       GatherBamFiles \
       INPUT=~{sep=' INPUT=' input_bams} \
       OUTPUT=~{output_bam_basename}.bam \
@@ -573,7 +638,8 @@ task HaplotypeCaller {
     Float? contamination
     Boolean make_gvcf
     Int hc_scatter = 199
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String? gatk_module
   }
 
   String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
@@ -590,6 +656,10 @@ task HaplotypeCaller {
   }
 
   command <<<
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
     set -e
     ~{gatk_cmd} --java-options "-Xms5500m " \
       HaplotypeCaller \

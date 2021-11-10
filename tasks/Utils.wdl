@@ -233,12 +233,18 @@ task ScatterIntervalList {
     Int scatter_count
     Int break_bands_at_multiples_of
     String picard_jar = "/usr/local/jars/picard.jar"
+    String? picard_module
   }
 
   command <<<
     set -e
     mkdir -p out
-    java -Xms1g -jar ~{picard_jar} \
+
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
+    java -Xms1g -jar $PICARD_JAR \
       IntervalListTools \
       SCATTER_COUNT=~{scatter_count} \
       SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \

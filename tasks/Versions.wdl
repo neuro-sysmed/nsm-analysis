@@ -57,25 +57,25 @@ workflow Versions {
           salmon_module = salmon_module
     }
 
-    # call Image as Image {
-    #     input:
-    #       image = image
-    # }
+    call Image as Image {
+        input:
+          image = image
+    }
 
-#    call Package as Package {
-#        input:
-#          version_file = version_file
-#    }
+    call Package as Package {
+        input:
+          version_file = version_file
+    }
 
-#    call Singularity as Singularity
+    call Singularity as Singularity
 
     output {
-#        String package  = Package.version
-#        String singularity = Singularity.version
-#        String image    = Image.version
-        String image    = "Image.version"
-        String singularity = "Meh"
-        String package  = "Package.version"
+        String package  = Package.version
+        String singularity = Singularity.version
+        String image    = Image.version
+#        String image    = "Image.version"
+#        String singularity = "Meh"
+#        String package  = "Package.version"
         String bwa      = Bwa.version
         String samtools = Samtools.version
         String picard   = Picard.version
@@ -251,7 +251,6 @@ task Picard {
 
     command {
         PICARD_JAR=~{picard_jar}
-
         if [[ ! -z "~{picard_module}" ]]; then
             module load ~{picard_module}
         fi
