@@ -12,18 +12,23 @@ workflow BamToUnalignedBam {
       String unmapped_bam_suffix = ".ubam"
       String mapped_bam_suffix = ".bam"
       String outdir = "."
+      String? picard_module
    }
 
    String bam_basename = basename(input_bam, mapped_bam_suffix)
 
-   call Versions.Versions as Versions
+   call Versions.Versions as Versions {
+      input:
+         picard_module = picard_module
+   }
 
 
    call BamUtils.RevertSam as RevertSam {
       input:
          input_bam = input_bam,
          output_bam_filename = bam_basename + unmapped_bam_suffix,
-         outdir = outdir
+         outdir = outdir,
+         picard_module = picard_module
    }
 
 

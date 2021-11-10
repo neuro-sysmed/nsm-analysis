@@ -16,10 +16,14 @@ workflow FqToUnalignedBam {
       String sample_name
       String readgroup
       String library_name = "NA"
+      String? picard_module
    }
 
 
-   call Versions.Versions as Versions
+   call Versions.Versions as Versions {
+      input:
+         picard_module = picard_module
+   }
 
    call FqUtils.FqToBam as FqToBam {
       input:
@@ -29,7 +33,8 @@ workflow FqToUnalignedBam {
          readgroup = "~{readgroup}",
          sample_name = sample_name,
          library_name = library_name,
-         outdir = "."
+         outdir = ".",
+         picard_module = picard_module
    }
 
     call Utils.WriteStringsToFile as RunInfo {
