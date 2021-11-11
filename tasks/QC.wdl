@@ -698,11 +698,16 @@ task ValidateVCF {
     File dbsnp_vcf_index
     File calling_interval_list
     Boolean is_gvcf = true
-    String gatk_cmd = "/usr/local/bin/gatk"
+    String gatk_cmd = "gatk"
+    String? gatk_module
   }
 
 
   command {
+    if [[ ! -z "~{gatk_module}" ]]; then
+        module load ~{gatk_module}
+    fi
+
     ~{gatk_cmd} --java-options -Xms6000m \
       ValidateVariants \
       -V ~{input_vcf} \
