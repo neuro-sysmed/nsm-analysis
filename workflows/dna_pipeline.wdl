@@ -38,7 +38,13 @@ workflow DNAProcessing {
    # Easier to refer to it later on.
    String sample_name  = sample_and_unmapped_bams.sample_name
    
-   call Versions.Versions as Versions
+   call Versions.Versions as Versions {
+      input:
+        bwa_module = bwa_module,
+        samtools_module = samtools_module,
+        picard_module = picard_module,
+        gatk_module = gatk_module,
+   }
 
  #  call Utils.Sleep {
  #     input:
@@ -193,7 +199,6 @@ workflow DNAProcessing {
             compression_level = compression_level,
             picard_module = picard_module
       }
-
    }
 
    # picks first non null value, so if recalibration is done this will be the first one

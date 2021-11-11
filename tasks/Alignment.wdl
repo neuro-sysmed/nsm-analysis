@@ -111,6 +111,7 @@ task BwaMem {
 #    docker: "bruggerk/nsm-tools:latest"
 #    memory: "14 GiB"
     cpus: 4
+    partition: large
 #    disks: "local-disk " + disk_size + " HDD"
   }
   output {
