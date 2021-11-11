@@ -191,7 +191,7 @@ workflow DNAProcessing {
             output_bam_basename = sample_and_unmapped_bams.base_filename,
             total_input_size = agg_bam_size,
             compression_level = compression_level,
-            gatk_module = gatk_module
+            picard_module = picard_module
       }
 
    }
