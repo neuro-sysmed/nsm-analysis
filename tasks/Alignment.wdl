@@ -63,9 +63,9 @@ task BwaMem {
     if [ -s ~{reference_fasta.ref_fasta} ]; then
       java -Xms1000m -Xmx1000m -jar $PICARD_JAR \
         SamToFastq \
-        -INPUT ~{input_bam} \ 
-        -FASTQ /dev/stdout \ 
-        -INTERLEAVE true \ 
+        -INPUT ~{input_bam} \
+        -FASTQ /dev/stdout \
+        -INTERLEAVE true \
         -NON_PF true | \
       ~{bwa_cmd} ~{bwa_commandline} /dev/stdin - 2> >(tee ~{bam_basename}.bwa.stderr.log >&2) | \
       java -Dsamjdk.compression_level=~{compression_level} -Xms1000m -Xmx1000m -jar $PICARD_JAR \
