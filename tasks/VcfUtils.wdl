@@ -119,6 +119,7 @@ task CNNScoreVariants {
   runtime {
 #    docker: gatk_docker
     memory: 15000
+    partition: "large"
     cpus: 2
   }
 }
@@ -171,6 +172,7 @@ task FilterVariantTranches {
 
   runtime {
     memory: 7000
+    partition: "medium"
     cpus: 2
   }
 }

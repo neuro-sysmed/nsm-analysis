@@ -53,6 +53,7 @@ task SortSam {
 #    disks: "local-disk " + disk_size + " HDD"
     cpus: 1
     memory: 5000
+    partition: "medium"
   }
   output {
     File output_bam = "bams/~{output_bam_basename}.bam"
@@ -87,6 +88,7 @@ task Index {
 #    disks: "local-disk " + disk_size + " HDD"
     cpus: 1
     memory: 5000
+    partition: "medium"
   }
   output {
     File output_bam_index = "~{basename}.bai"
@@ -138,6 +140,7 @@ task RevertSam {
 #    disks: "local-disk " + disk_size + " HDD"
     cpus: 1
     memory: 5000
+    partition: "medium"
   }
   output {
     File output_bam = "~{outdir}/~{output_bam_filename}"
@@ -681,6 +684,7 @@ task HaplotypeCaller {
 #    docker: gatk_docker
     memory: 6500
     cpus: "2"
+    partition: "medium"
   }
 
   output {
@@ -765,6 +769,8 @@ task CheckContamination {
   runtime {
     memory: 7500
     cpus: 2
+    partition: "medium"
+
   }
   output {
     File selfSM = "~{output_prefix}.selfSM"

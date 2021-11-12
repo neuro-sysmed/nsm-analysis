@@ -52,6 +52,8 @@ task FqToBam {
 #    disks: "local-disk " + disk_size + " HDD"
     cpus: 1
     memory: 5000
+    partition: "medium"
+
   }
   output {
     File output_bam = "~{outdir}/~{output_bam_filename}"
