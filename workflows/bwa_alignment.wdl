@@ -96,7 +96,7 @@ workflow BwaProcessing {
 
    call BamUtils.BamAddProgramLine as BamAddPipelineVersion {
       input:
-         bamfile = BamAddImageVersion.output_bam,
+         bamfile = MarkDuplicates.output_bam,
          id = 'nsm-analysis',
          version = Versions.package,
          samtools_module = samtools_module,
