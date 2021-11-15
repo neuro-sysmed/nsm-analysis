@@ -12,9 +12,13 @@ workflow Salmon {
       File? rev_reads
       String reference_dir
       Int threads = 6
+      String? salmon_module
     }
 
-    call Versions.Versions as Versions
+    call Versions.Versions as Versions {
+        input:
+          salmon_module = salmon_module
+    }
 
     call Alignment.Salmon as Sal {
         input:
@@ -22,7 +26,8 @@ workflow Salmon {
             fwd_reads = fwd_reads,
             rev_reads = rev_reads,
             reference_dir = reference_dir,
-            threads = threads
+            threads = threads,
+            salmon_module = salmon_module
    }
 
     call Utils.WriteStringsToFile as RunInfo {
