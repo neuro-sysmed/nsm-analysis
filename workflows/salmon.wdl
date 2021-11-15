@@ -29,7 +29,7 @@ workflow Salmon {
         input:
             strings = ["workflow\tSalmon",
                        "salmon\t"+Versions.salmon,
-                       "nsm-analysis\t"+Versions.package,
+                       "nsm-analysis\t"+Versions.package],
             outfile = "~{sample_name}.runinfo"
     }
       
