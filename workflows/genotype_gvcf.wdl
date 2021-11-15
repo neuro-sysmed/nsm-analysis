@@ -32,7 +32,7 @@ workflow GenotypeGvcf {
       ref_dict = references.reference_fasta.ref_dict,
       calling_interval_list = references.wgs_calling_interval_list,
       is_gvcf = true,
-      picard_module = picard_module,
+      gatk_module = gatk_module,
   }
 
   call VcfUtils.GenotypeGVCF as GenotypeGVCF {
